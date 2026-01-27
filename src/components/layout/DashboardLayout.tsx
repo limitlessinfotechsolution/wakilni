@@ -28,16 +28,16 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
   return (
     <div className={cn('flex min-h-screen w-full bg-background', getThemeClass())}>
-      {/* Desktop Sidebar - hidden on mobile */}
-      <div className="hidden md:block">
+      {/* Desktop Sidebar - hidden on mobile and tablet */}
+      <div className="hidden lg:block">
         <DashboardSidebar />
       </div>
-      <div className="flex-1 flex flex-col min-h-screen">
+      <div className="flex-1 flex flex-col min-h-screen w-full">
         <Header showNav={false} />
-        <main className="flex-1 overflow-auto pb-20 md:pb-0">
+        <main className="flex-1 overflow-auto pb-0 md:pb-0">
           {children}
         </main>
-        {/* Mobile Bottom Nav */}
+        {/* Mobile Bottom Nav - shown on mobile and tablet */}
         <MobileBottomNav />
       </div>
     </div>

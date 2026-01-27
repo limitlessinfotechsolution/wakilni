@@ -23,9 +23,11 @@ export function LanguageProvider({ children, defaultLanguage = 'en' }: LanguageP
     if (stored && (stored === 'en' || stored === 'ar')) {
       return stored;
     }
-    // Check browser language
+    // Check browser language for auto-detection
     const browserLang = navigator.language.toLowerCase();
     if (browserLang.startsWith('ar')) {
+      // Auto-set and persist
+      localStorage.setItem('wakilni-language', 'ar');
       return 'ar';
     }
     return defaultLanguage;
