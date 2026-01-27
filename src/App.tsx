@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { LanguageProvider } from "@/lib/i18n";
 import { AuthProvider, useAuth } from "@/lib/auth";
+import { ThemeProvider } from "@/hooks/useTheme";
 
 // Pages
 import LandingPage from "./pages/LandingPage";
@@ -143,17 +144,19 @@ function AppRoutes() {
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <LanguageProvider>
-      <BrowserRouter>
-        <AuthProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <AppRoutes />
-          </TooltipProvider>
-        </AuthProvider>
-      </BrowserRouter>
-    </LanguageProvider>
+    <ThemeProvider>
+      <LanguageProvider>
+        <BrowserRouter>
+          <AuthProvider>
+            <TooltipProvider>
+              <Toaster />
+              <Sonner />
+              <AppRoutes />
+            </TooltipProvider>
+          </AuthProvider>
+        </BrowserRouter>
+      </LanguageProvider>
+    </ThemeProvider>
   </QueryClientProvider>
 );
 

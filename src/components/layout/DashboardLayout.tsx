@@ -1,6 +1,7 @@
 import { ReactNode } from 'react';
 import { DashboardSidebar } from './DashboardSidebar';
 import { Header } from './Header';
+import { MobileBottomNav } from './MobileBottomNav';
 import { useAuth } from '@/lib/auth';
 import { cn } from '@/lib/utils';
 
@@ -27,12 +28,17 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
   return (
     <div className={cn('flex min-h-screen w-full bg-background', getThemeClass())}>
-      <DashboardSidebar />
+      {/* Desktop Sidebar - hidden on mobile */}
+      <div className="hidden md:block">
+        <DashboardSidebar />
+      </div>
       <div className="flex-1 flex flex-col min-h-screen">
         <Header showNav={false} />
-        <main className="flex-1 overflow-auto">
+        <main className="flex-1 overflow-auto pb-20 md:pb-0">
           {children}
         </main>
+        {/* Mobile Bottom Nav */}
+        <MobileBottomNav />
       </div>
     </div>
   );
