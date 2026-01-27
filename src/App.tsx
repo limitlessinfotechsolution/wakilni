@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { LanguageProvider } from "@/lib/i18n";
 import { AuthProvider, useAuth } from "@/lib/auth";
 import { ThemeProvider } from "@/hooks/useTheme";
+import { useAutoThemeSync } from "@/hooks/useDeviceDetection";
 
 // Pages
 import LandingPage from "./pages/LandingPage";
@@ -33,6 +34,7 @@ import BookingAllocationPage from "./pages/admin/BookingAllocationPage";
 import SystemSettingsPage from "./pages/super-admin/SystemSettingsPage";
 import AuditLogsPage from "./pages/super-admin/AuditLogsPage";
 import AdminManagementPage from "./pages/super-admin/AdminManagementPage";
+import AnalyticsPage from "./pages/super-admin/AnalyticsPage";
 import VendorBookingsPage from "./pages/vendor/VendorBookingsPage";
 import VendorServicesPage from "./pages/vendor/VendorServicesPage";
 import VendorSubscriptionPage from "./pages/vendor/VendorSubscriptionPage";
@@ -44,6 +46,12 @@ import ProviderProfilePage from "./pages/providers/ProviderProfilePage";
 
 const queryClient = new QueryClient();
 
+// Auto theme sync wrapper
+function AutoThemeSyncWrapper({ children }: { children: React.ReactNode }) {
+  useAutoThemeSync();
+  return <>{children}</>;
+}
+
 // Protected Route Component
 function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode; allowedRoles?: string[] }) {
   const { user, role, isLoading } = useAuth();
@@ -51,7 +59,12 @@ function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode;
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="animate-pulse text-muted-foreground">Loading...</div>
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center animate-pulse">
+            <span className="text-2xl text-primary font-arabic">و</span>
+          </div>
+          <p className="text-muted-foreground animate-pulse">Loading...</p>
+        </div>
       </div>
     );
   }
@@ -77,7 +90,12 @@ function DashboardRouter() {
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="animate-pulse text-muted-foreground">Loading...</div>
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center animate-pulse">
+            <span className="text-2xl text-primary font-arabic">و</span>
+          </div>
+          <p className="text-muted-foreground animate-pulse">Loading...</p>
+        </div>
       </div>
     );
   }
@@ -147,6 +165,7 @@ function AppRoutes() {
       <Route path="/super-admin/settings" element={<ProtectedRoute allowedRoles={['super_admin']}><SystemSettingsPage /></ProtectedRoute>} />
       <Route path="/super-admin/audit" element={<ProtectedRoute allowedRoles={['super_admin']}><AuditLogsPage /></ProtectedRoute>} />
       <Route path="/super-admin/admins" element={<ProtectedRoute allowedRoles={['super_admin']}><AdminManagementPage /></ProtectedRoute>} />
+      <Route path="/super-admin/analytics" element={<ProtectedRoute allowedRoles={['super_admin']}><AnalyticsPage /></ProtectedRoute>} />
 
       {/* Catch-all */}
       <Route path="*" element={<NotFound />} />
@@ -160,11 +179,13 @@ const App = () => (
       <LanguageProvider>
         <BrowserRouter>
           <AuthProvider>
-            <TooltipProvider>
-              <Toaster />
-              <Sonner />
-              <AppRoutes />
-            </TooltipProvider>
+            <AutoThemeSyncWrapper>
+              <TooltipProvider>
+                <Toaster />
+                <Sonner />
+                <AppRoutes />
+              </TooltipProvider>
+            </AutoThemeSyncWrapper>
           </AuthProvider>
         </BrowserRouter>
       </LanguageProvider>

@@ -52,27 +52,35 @@ const adminNav: NavItem[] = [
   { title: 'Allocations', titleAr: 'التخصيصات', href: '/admin/allocations', icon: BarChart3 },
 ];
 
+const superAdminNav: NavItem[] = [
+  { title: 'Analytics', titleAr: 'التحليلات', href: '/super-admin/analytics', icon: BarChart3 },
+  { title: 'System Settings', titleAr: 'إعدادات النظام', href: '/super-admin/settings', icon: Settings },
+  { title: 'Audit Logs', titleAr: 'سجل التدقيق', href: '/super-admin/audit', icon: Clock },
+  { title: 'Admin Management', titleAr: 'إدارة المشرفين', href: '/super-admin/admins', icon: Shield },
+];
+
 export function DashboardSidebar() {
   const { isRTL } = useLanguage();
   const { role } = useAuth();
   const location = useLocation();
   const [isExpanded, setIsExpanded] = useState(true);
 
-  const getNavItems = () => {
+  const getNavItems = (): { main: NavItem[]; extra?: NavItem[] } => {
     switch (role) {
       case 'super_admin':
+        return { main: adminNav, extra: superAdminNav };
       case 'admin':
-        return adminNav;
+        return { main: adminNav };
       case 'provider':
-        return providerNav;
+        return { main: providerNav };
       case 'vendor':
-        return vendorNav;
+        return { main: vendorNav };
       default:
-        return travelerNav;
+        return { main: travelerNav };
     }
   };
 
-  const navItems = getNavItems();
+  const { main: navItems, extra: extraItems } = getNavItems();
 
   const getRoleThemeClass = () => {
     switch (role) {
@@ -170,6 +178,60 @@ export function DashboardSidebar() {
             return <li key={item.href}>{linkContent}</li>;
           })}
         </ul>
+
+        {/* Super Admin Extra Items */}
+        {extraItems && extraItems.length > 0 && (
+          <>
+            <div className={cn('px-4 py-2 mt-4', !isExpanded && 'hidden')}>
+              <p className="text-xs text-destructive font-semibold uppercase tracking-wider">
+                {isRTL ? 'المشرف الرئيسي' : 'Super Admin'}
+              </p>
+            </div>
+            <ul className="space-y-1 px-2">
+              {extraItems.map((item) => {
+                const isActive = location.pathname === item.href;
+                const Icon = item.icon;
+
+                const linkContent = (
+                  <Link
+                    to={item.href}
+                    className={cn(
+                      'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all',
+                      isActive
+                        ? 'bg-destructive text-destructive-foreground'
+                        : 'text-sidebar-foreground hover:bg-destructive/10 hover:text-destructive',
+                      !isExpanded && 'justify-center px-2'
+                    )}
+                  >
+                    <Icon className="h-5 w-5 shrink-0" />
+                    {isExpanded && (
+                      <span className={isRTL ? 'font-arabic' : ''}>
+                        {isRTL ? item.titleAr : item.title}
+                      </span>
+                    )}
+                  </Link>
+                );
+
+                if (!isExpanded) {
+                  return (
+                    <li key={item.href}>
+                      <Tooltip delayDuration={0}>
+                        <TooltipTrigger asChild>
+                          {linkContent}
+                        </TooltipTrigger>
+                        <TooltipContent side={isRTL ? 'left' : 'right'} className="font-medium">
+                          {isRTL ? item.titleAr : item.title}
+                        </TooltipContent>
+                      </Tooltip>
+                    </li>
+                  );
+                }
+
+                return <li key={item.href}>{linkContent}</li>;
+              })}
+            </ul>
+          </>
+        )}
       </nav>
 
       {/* Footer */}
