@@ -19,6 +19,7 @@ import NotFound from "./pages/NotFound";
 import BeneficiariesPage from "./pages/beneficiaries/BeneficiariesPage";
 import NewBookingPage from "./pages/bookings/NewBookingPage";
 import BookingsPage from "./pages/bookings/BookingsPage";
+import BookingDetailPage from "./pages/bookings/BookingDetailPage";
 import KycPage from "./pages/provider/KycPage";
 import ServicesPage from "./pages/provider/ServicesPage";
 import KycQueuePage from "./pages/admin/KycQueuePage";
@@ -104,6 +105,7 @@ function AppRoutes() {
       <Route path="/beneficiaries" element={<ProtectedRoute><BeneficiariesPage /></ProtectedRoute>} />
       <Route path="/bookings" element={<ProtectedRoute><BookingsPage /></ProtectedRoute>} />
       <Route path="/bookings/new" element={<ProtectedRoute><NewBookingPage /></ProtectedRoute>} />
+      <Route path="/bookings/:id" element={<ProtectedRoute><BookingDetailPage /></ProtectedRoute>} />
       
       {/* Provider Routes */}
       <Route path="/provider" element={<ProtectedRoute allowedRoles={['provider', 'admin', 'super_admin']}><ProviderDashboard /></ProtectedRoute>} />
