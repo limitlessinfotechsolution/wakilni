@@ -4,7 +4,6 @@ import {
   ArrowLeft, 
   ArrowRight,
   Calendar, 
-  MapPin, 
   User, 
   DollarSign,
   CheckCircle,
@@ -12,20 +11,23 @@ import {
   PlayCircle,
   XCircle,
   AlertTriangle,
-  Loader2
+  Loader2,
+  Star
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Separator } from '@/components/ui/separator';
 import { MainLayout } from '@/components/layout';
 import { BookingTimeline } from '@/components/bookings/BookingTimeline';
 import { BookingMessages } from '@/components/bookings/BookingMessages';
 import { ProofGallery } from '@/components/bookings/ProofGallery';
+import { ReviewForm } from '@/components/bookings/ReviewForm';
+import { ReviewDisplay } from '@/components/bookings/ReviewDisplay';
 import { useLanguage } from '@/lib/i18n';
 import { useAuth } from '@/lib/auth';
 import { useBookingDetail, type BookingStatus } from '@/hooks/useBookingDetail';
+import { useReviews } from '@/hooks/useReviews';
 import { cn } from '@/lib/utils';
 
 const statusConfig: Record<BookingStatus, { icon: typeof Clock; color: string; bgColor: string; label: { en: string; ar: string } }> = {
@@ -81,6 +83,9 @@ export default function BookingDetailPage() {
     uploadProof,
     markMessagesAsRead 
   } = useBookingDetail(id);
+  
+  const providerId = booking?.provider?.id;
+  const { existingReview, submitReview, updateReview } = useReviews(providerId, id);
 
   if (isLoading) {
     return (
@@ -354,6 +359,53 @@ export default function BookingDetailPage() {
                   )}
                 </CardContent>
               </Card>
+            )}
+
+            {/* Review Section - For completed bookings */}
+            {status === 'completed' && isTraveler && booking.provider && (
+              existingReview ? (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <Star className="h-4 w-4" />
+                      {isRTL ? 'تقييمك' : 'Your Review'}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-1">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <Star
+                            key={star}
+                            className={cn(
+                              'h-5 w-5',
+                              star <= existingReview.rating
+                                ? 'fill-yellow-400 text-yellow-400'
+                                : 'text-muted-foreground'
+                            )}
+                          />
+                        ))}
+                      </div>
+                      {(existingReview.comment || existingReview.comment_ar) && (
+                        <p className="text-sm text-muted-foreground">
+                          {isRTL && existingReview.comment_ar 
+                            ? existingReview.comment_ar 
+                            : existingReview.comment}
+                        </p>
+                      )}
+                      <p className="text-xs text-muted-foreground">
+                        {isRTL ? 'شكراً لتقييمك!' : 'Thank you for your review!'}
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              ) : (
+                <ReviewForm
+                  onSubmit={(rating, comment, commentAr) => 
+                    submitReview(rating, comment, commentAr)
+                  }
+                />
+              )
             )}
 
             {/* Booking Dates */}
