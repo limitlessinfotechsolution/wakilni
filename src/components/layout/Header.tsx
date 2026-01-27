@@ -13,6 +13,7 @@ import {
 import { useLanguage } from '@/lib/i18n';
 import { useAuth } from '@/lib/auth';
 import { LanguageToggle } from '@/components/LanguageToggle';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import { AdminNotifications } from '@/components/admin/AdminNotifications';
 
 interface HeaderProps {
@@ -108,6 +109,7 @@ export function Header({ showNav = true }: HeaderProps) {
 
         {/* Right Side Actions */}
         <div className="flex items-center gap-2">
+          <ThemeToggle />
           <LanguageToggle />
           {isAdmin && <AdminNotifications />}
 
