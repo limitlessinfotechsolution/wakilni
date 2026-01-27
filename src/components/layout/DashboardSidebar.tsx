@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { 
   Home, Calendar, Users, FileText, Star, Settings, ChevronLeft, ChevronRight,
   CreditCard, Building2, Shield, UserCheck, BarChart3, DollarSign, Bell,
-  BookOpen, Clock, Heart, Compass, Moon, Sun
+  BookOpen, Clock, Heart, Compass, Moon, Sun, CalendarClock
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/lib/i18n';
@@ -29,6 +29,7 @@ const travelerNav: NavItem[] = [
 const providerNav: NavItem[] = [
   { title: 'Dashboard', titleAr: 'لوحة التحكم', href: '/provider', icon: Home },
   { title: 'Calendar', titleAr: 'التقويم', href: '/provider/calendar', icon: Calendar },
+  { title: 'Availability', titleAr: 'التوفر', href: '/provider/availability', icon: CalendarClock },
   { title: 'Services', titleAr: 'الخدمات', href: '/provider/services', icon: FileText },
   { title: 'Reviews', titleAr: 'المراجعات', href: '/provider/reviews', icon: Star },
   { title: 'Verification', titleAr: 'التحقق', href: '/provider/kyc', icon: Shield },

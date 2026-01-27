@@ -444,6 +444,59 @@ export type Database = {
         }
         Relationships: []
       }
+      provider_availability: {
+        Row: {
+          created_at: string
+          current_bookings: number | null
+          date: string
+          end_time: string | null
+          id: string
+          is_available: boolean
+          max_bookings: number | null
+          notes: string | null
+          notes_ar: string | null
+          provider_id: string
+          start_time: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          current_bookings?: number | null
+          date: string
+          end_time?: string | null
+          id?: string
+          is_available?: boolean
+          max_bookings?: number | null
+          notes?: string | null
+          notes_ar?: string | null
+          provider_id: string
+          start_time?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          current_bookings?: number | null
+          date?: string
+          end_time?: string | null
+          id?: string
+          is_available?: boolean
+          max_bookings?: number | null
+          notes?: string | null
+          notes_ar?: string | null
+          provider_id?: string
+          start_time?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "provider_availability_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       provider_bids: {
         Row: {
           bid_amount: number
