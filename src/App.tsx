@@ -22,7 +22,7 @@ import NewBookingPage from "./pages/bookings/NewBookingPage";
 import BookingsPage from "./pages/bookings/BookingsPage";
 import BookingDetailPage from "./pages/bookings/BookingDetailPage";
 import KycPage from "./pages/provider/KycPage";
-import ServicesPage from "./pages/provider/ServicesPage";
+import ProviderServicesPage from "./pages/provider/ServicesPage";
 import ReviewsPage from "./pages/provider/ReviewsPage";
 import KycQueuePage from "./pages/admin/KycQueuePage";
 import UsersManagementPage from "./pages/admin/UsersManagementPage";
@@ -37,6 +37,8 @@ import VendorBookingsPage from "./pages/vendor/VendorBookingsPage";
 import VendorServicesPage from "./pages/vendor/VendorServicesPage";
 import VendorSubscriptionPage from "./pages/vendor/VendorSubscriptionPage";
 import VendorKycPage from "./pages/vendor/VendorKycPage";
+import ProfileSettingsPage from "./pages/settings/ProfileSettingsPage";
+import ServicesPage from "./pages/services/ServicesPage";
 
 const queryClient = new QueryClient();
 
@@ -108,11 +110,15 @@ function AppRoutes() {
       <Route path="/bookings" element={<ProtectedRoute><BookingsPage /></ProtectedRoute>} />
       <Route path="/bookings/new" element={<ProtectedRoute><NewBookingPage /></ProtectedRoute>} />
       <Route path="/bookings/:id" element={<ProtectedRoute><BookingDetailPage /></ProtectedRoute>} />
+      <Route path="/services" element={<ServicesPage />} />
+      
+      {/* Settings Routes */}
+      <Route path="/settings/profile" element={<ProtectedRoute><ProfileSettingsPage /></ProtectedRoute>} />
       
       {/* Provider Routes */}
       <Route path="/provider" element={<ProtectedRoute allowedRoles={['provider', 'admin', 'super_admin']}><ProviderDashboard /></ProtectedRoute>} />
       <Route path="/provider/kyc" element={<ProtectedRoute allowedRoles={['provider', 'admin', 'super_admin']}><KycPage /></ProtectedRoute>} />
-      <Route path="/provider/services" element={<ProtectedRoute allowedRoles={['provider', 'admin', 'super_admin']}><ServicesPage /></ProtectedRoute>} />
+      <Route path="/provider/services" element={<ProtectedRoute allowedRoles={['provider', 'admin', 'super_admin']}><ProviderServicesPage /></ProtectedRoute>} />
       <Route path="/provider/reviews" element={<ProtectedRoute allowedRoles={['provider', 'admin', 'super_admin']}><ReviewsPage /></ProtectedRoute>} />
       
       {/* Vendor Routes */}

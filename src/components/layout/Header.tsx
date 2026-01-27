@@ -15,6 +15,7 @@ import { useAuth } from '@/lib/auth';
 import { LanguageToggle } from '@/components/LanguageToggle';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { AdminNotifications } from '@/components/admin/AdminNotifications';
+import { NotificationBell } from '@/components/notifications/NotificationBell';
 
 interface HeaderProps {
   showNav?: boolean;
@@ -111,6 +112,7 @@ export function Header({ showNav = true }: HeaderProps) {
         <div className="flex items-center gap-2">
           <ThemeToggle />
           <LanguageToggle />
+          {user && <NotificationBell />}
           {isAdmin && <AdminNotifications />}
 
           {user ? (
@@ -140,13 +142,13 @@ export function Header({ showNav = true }: HeaderProps) {
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link to="/profile" className="flex items-center gap-2 cursor-pointer">
+                  <Link to="/settings/profile" className="flex items-center gap-2 cursor-pointer">
                     <User className="h-4 w-4" />
                     {t.nav.profile}
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link to="/settings" className="flex items-center gap-2 cursor-pointer">
+                  <Link to="/settings/profile" className="flex items-center gap-2 cursor-pointer">
                     <Settings className="h-4 w-4" />
                     {t.nav.settings}
                   </Link>

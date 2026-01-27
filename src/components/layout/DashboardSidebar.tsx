@@ -23,6 +23,7 @@ const travelerNav: NavItem[] = [
   { title: 'Bookings', titleAr: 'الحجوزات', href: '/bookings', icon: Calendar },
   { title: 'Beneficiaries', titleAr: 'المستفيدون', href: '/beneficiaries', icon: Users },
   { title: 'Services', titleAr: 'الخدمات', href: '/services', icon: FileText },
+  { title: 'Settings', titleAr: 'الإعدادات', href: '/settings/profile', icon: Settings },
 ];
 
 const providerNav: NavItem[] = [
