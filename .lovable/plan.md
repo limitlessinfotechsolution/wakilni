@@ -1,536 +1,589 @@
 
-# Wakilni Complete UI Redesign Plan
-## From Website to Professional Mobile App + Web Platform
-
-### ✅ PHASE 1 COMPLETE - Foundation (Design System)
-
-**Implemented:**
-- ✅ Design tokens CSS (`src/styles/design-tokens.css`) - typography, colors, shadows, spacing
-- ✅ Animation system (`src/styles/animations.css`) - keyframes, transitions, spring physics
-- ✅ Updated `tailwind.config.ts` with new tokens and utilities
-- ✅ Overhauled `src/index.css` with premium styling, glass effects, gradients
-- ✅ `useHaptics` hook for native haptic feedback
-- ✅ `useGestures` hook for swipe, long-press, pull-to-refresh gestures
-
-**New Components Created:**
-- ✅ `GlassCard` - Frosted glass card with blur effects
-- ✅ `StatCard` - Premium stat display with gradients and icons
-- ✅ `FloatingTabBar` - iOS-style floating bottom navigation
-- ✅ `AppHeader` - Collapsing mobile header
-- ✅ `EmptyState`, `LoadingState`, `ErrorState` - Feedback components
-
-**Updated Pages:**
-- ✅ `TravelerDashboard` - Premium glass cards, gradient text, animations
-- ✅ `ProviderDashboard` - Premium stat cards, glass effects
-- ✅ `DashboardLayout` - Now uses FloatingTabBar for mobile
+# Phase 3: Complete Internal Screens Redesign
+## Provider Dashboard, Ritual Interface & All Internal Pages
 
 ---
 
-## Current State Analysis
+## Overview
 
-### What Exists Today
-- **Design System**: Faith-inspired color palette (emerald, gold, cream) with role-based themes
-- **Layout**: Sidebar navigation for desktop, bottom navigation for mobile
-- **Components**: Basic mobile-optimized cards, widgets, forms
-- **PWA**: Service worker, install prompts, offline support foundation
-
-### Key Issues Identified
-1. **Website Feel**: Cards and layouts feel like web components, not native app elements
-2. **Generic Typography**: Missing the premium, refined typography mobile apps use
-3. **Shallow Animations**: Basic transitions without the spring physics and depth of native apps
-4. **Icon Design**: Standard Lucide icons lack custom branding and personality
-5. **Visual Hierarchy**: Flat design without layered depth (shadows, blurs, gradients)
-6. **Navigation**: Functional but not immersive or gesture-driven
-7. **Empty States**: Generic placeholders instead of engaging illustrations
-8. **Onboarding**: No guided tour or first-run experience
+This phase transforms **every internal screen** into a premium, native-feeling mobile app experience. Each screen receives unique functionality, animations, and role-specific styling following the "Sacred Simplicity" design philosophy established in Phases 1-2.
 
 ---
 
-## Design Vision: "Sacred Simplicity"
+## Screens to Redesign (25+ Pages)
 
-**Philosophy**: Create an interface that feels like a high-end Islamic banking app or premium Quran app - reverent, trustworthy, and beautifully crafted.
+### A. Dashboards (4 Screens)
+1. Provider Dashboard
+2. Admin Dashboard
+3. Vendor Dashboard
+4. Traveler Dashboard (enhancement)
 
-**Inspiration Sources**:
-- Apple Wallet / Health app (card-based, layered UI)
-- Quran Majeed / Muslim Pro (faith-inspired design)
-- Careem / Grab super-apps (seamless multi-service experience)
-- Wise / Revolut (clean fintech mobile design)
+### B. Booking System (4 Screens)
+1. Bookings List Page
+2. Booking Detail Page
+3. New Booking Page (wizard refinement)
+4. Booking Allocation Page (admin)
 
----
+### C. Provider Section (6 Screens)
+1. Provider Services Management
+2. Provider Availability Calendar
+3. Provider KYC Verification
+4. Provider Gallery
+5. Provider Reviews
+6. Ritual Event Recorder (major)
 
-## Phase 1: Design System Overhaul
+### D. Traveler Section (3 Screens)
+1. Beneficiaries Management
+2. Services Browse Page
+3. Donate/Charity Page
 
-### 1.1 Typography System
-```text
-Current:
-  Font: Inter + Amiri
-  Scale: Basic responsive sizing
+### E. Admin Section (8 Screens)
+1. KYC Queue
+2. Providers Management
+3. Vendors Management
+4. Users Management
+5. Donations Management
+6. Subscriptions Management
+7. Scholar Verification Queue
+8. Certificate Verification (public)
 
-Proposed:
-  Headlines: SF Pro Display / Inter Display (weight 600-700)
-  Body: SF Pro Text / Inter (weight 400-500)
-  Arabic: Tajawal + Amiri (refined pairing)
-  Scale: Fluid type scale with clamp()
-  
-  Mobile Headlines: 24-32px (compact)
-  Desktop Headlines: 32-48px (expansive)
-  
-  Line Height: 1.2 for headlines, 1.5 for body
-  Letter Spacing: -0.02em for headlines
-```
+### F. Super Admin Section (4 Screens)
+1. Analytics Dashboard
+2. Audit Logs
+3. System Settings
+4. Admin Management
 
-### 1.2 Color System Enhancement
-```text
-Add semantic colors:
-  --success: Emerald green
-  --warning: Warm amber
-  --error: Soft coral red
-  --info: Calm blue
-  
-Add depth layers:
-  --surface-0: Base background
-  --surface-1: Card level
-  --surface-2: Elevated modal level
-  --surface-3: Top-level overlay
-  
-Add gradients:
-  --gradient-sacred: Emerald to Teal
-  --gradient-gold: Amber to Gold
-  --gradient-twilight: Deep blue to Purple (night mode)
-```
-
-### 1.3 Shadow & Depth System
-```text
---shadow-xs: 0 1px 2px rgba(0,0,0,0.05)
---shadow-sm: 0 2px 4px rgba(0,0,0,0.06)
---shadow-md: 0 4px 12px rgba(0,0,0,0.08)
---shadow-lg: 0 8px 24px rgba(0,0,0,0.12)
---shadow-xl: 0 16px 48px rgba(0,0,0,0.16)
-
-Cards will have layered shadows creating visual depth
-```
-
-### 1.4 Motion & Animation System
-```text
-Spring Physics:
-  --spring-bounce: cubic-bezier(0.34, 1.56, 0.64, 1)
-  --spring-smooth: cubic-bezier(0.25, 0.46, 0.45, 0.94)
-  
-Durations:
-  --duration-fast: 150ms
-  --duration-normal: 250ms
-  --duration-slow: 400ms
-  
-Animations:
-  - Page transitions: Slide + fade with spring physics
-  - Card interactions: Scale + glow on press
-  - List items: Staggered entrance animations
-  - Loaders: Morphing shapes (Islamic patterns)
-```
-
----
-
-## Phase 2: Component Architecture Redesign
-
-### 2.1 App Shell Components
-
-**New Mobile Header**
-```text
-Features:
-  - Transparent/blurred background
-  - Large title that collapses on scroll (iOS-style)
-  - Avatar with status ring
-  - Notification badge with animation
-  - Contextual actions per screen
-```
-
-**Enhanced Bottom Navigation**
-```text
-Features:
-  - Floating tab bar (8px from bottom, rounded)
-  - Active indicator: Pill shape with glow
-  - Center "action" button for quick booking
-  - Haptic feedback on tap
-  - Badge animations (bounce on update)
-  - Smooth morphing between states
-```
-
-**Gesture-Driven Navigation**
-```text
-  - Swipe back to navigate
-  - Pull down to refresh with custom animation
-  - Long press context menus
-  - Swipe actions on list items
-```
-
-### 2.2 Card Components
-
-**Glass Card**
-```text
-New premium card style:
-  - Frosted glass background (backdrop-blur)
-  - Subtle gradient border
-  - Inner glow on hover/active
-  - Elevation change on interaction
-```
-
-**Stat Card (Redesigned)**
-```text
-  - Large number with gradient text
-  - Subtle icon watermark in corner
-  - Trend indicator with animation
-  - Tap to expand for details
-```
-
-**Service Card**
-```text
-  - Full-width image with gradient overlay
-  - Floating price badge
-  - Provider avatar with verification badge
-  - Rating stars with gold fill animation
-  - "Book Now" button with pulse effect
-```
-
-**Booking Card**
-```text
-  - Status timeline visualization
-  - Beneficiary avatar prominent
-  - Provider connection indicator
-  - Live status badge
-  - Quick action buttons (message, track)
-```
-
-### 2.3 Form Components
-
-**Input Fields**
-```text
-  - Floating labels (rise on focus)
-  - Colored focus rings matching context
-  - Inline validation with animations
-  - Auto-suggestions in dropdowns
-  - Voice input option for accessibility
-```
-
-**Selection Components**
-```text
-  - Large touch targets (48px minimum)
-  - Radio/checkbox with custom animations
-  - Segment controls for binary choices
-  - Slider with haptic feedback at intervals
-```
-
----
-
-## Phase 3: Screen-by-Screen Redesign
-
-### 3.1 Landing Page (Web Focus)
-```text
-Structure:
-  1. Hero: Full-viewport with video/animated Kaaba imagery
-     - Floating navigation (transparent on scroll)
-     - Quranic verse with typewriter animation
-     - Two CTAs: "Start Journey" + "Learn More"
-     
-  2. Services: Horizontal scroll cards (mobile) / Grid (desktop)
-     - Each with ambient Islamic pattern animation
-     
-  3. How It Works: Vertical stepper with scroll-triggered animations
-     - Step icons animate in sequence
-     
-  4. Trust: Provider showcase carousel
-     - Verified badges, ratings, testimonials
-     
-  5. Faith: Islamic quotes section with parallax
-     
-  6. CTA: Full-width card with gradient, subtle pattern
-```
-
-### 3.2 Authentication Screens
-```text
-Login:
-  - Centered card with premium shadow
-  - Animated logo at top
-  - Social login options in button group
-  - Biometric login option (Face ID / Fingerprint visual)
-  - Forgot password inline expandable
-
-Signup:
-  - Multi-step wizard with horizontal progress
-  - Role selection as illustrated cards (not buttons)
-  - Each role has unique visual identity
-  - Form fields animate in sequence
-  - Real-time validation feedback
-```
-
-### 3.3 Traveler Dashboard
-```text
-Layout (Mobile):
-  - Collapsing header with greeting + avatar
-  - Islamic date/time widget (hero position)
-  - Quick actions: Large icon buttons in row
-  - Active bookings: Full-width cards
-  - Islamic tools: 2x3 grid with gradient backgrounds
-  - Recent activity: Timeline style
-
-Layout (Desktop):
-  - Split view: Main content + Islamic widgets sidebar
-  - Larger stat cards with charts
-  - Quick actions as command palette shortcut
-```
-
-### 3.4 Booking Flow (Complete Redesign)
-```text
-Step 1 - Service Selection:
-  - Full-screen cards with parallax images
-  - Swipe between Umrah / Hajj / Ziyarat
-  - Islamic geometric transition between cards
-
-Step 2 - Provider Selection:
-  - Map view option for geographic selection
-  - List view with rich provider cards
-  - Filters in bottom sheet (not modal)
-  - Comparison mode (select 2-3 to compare)
-
-Step 3 - Date Selection:
-  - Large calendar with availability colors
-  - Hijri/Gregorian toggle
-  - Time slots as horizontal scroll
-  - Selected date confirmation card
-
-Step 4 - Beneficiary:
-  - Existing: Card carousel selection
-  - New: Inline form that expands
-  - Relationship selector with illustrations
-
-Step 5 - Review:
-  - Receipt-style card design
-  - Edit buttons per section
-  - Total with breakdown expandable
-  - Special requests text area
-
-Step 6 - Payment:
-  - Payment method cards (Apple Pay style)
-  - Security badges prominent
-  - Escrow explanation tooltip
-  - Confirmation animation (confetti + success)
-```
-
-### 3.5 Provider App Experience
-```text
-Dashboard:
-  - Earnings hero with graph spark line
-  - Today's schedule timeline
-  - Pending actions with urgency indicators
-  - Performance ring charts
-
-Service Execution:
-  - Full-screen ritual recording interface
-  - Large camera capture button
-  - GPS status always visible
-  - Step-by-step checklist overlay
-  - Audio dua recorder with waveform
-
-Calendar:
-  - Month/week/day toggle
-  - Drag to reschedule
-  - Color-coded booking status
-  - Quick add availability slots
-```
-
-### 3.6 Admin Dashboard
-```text
-Design:
-  - Command center aesthetic
-  - Dark theme option for admins
-  - Data-dense but organized
-  - Real-time counters with animations
-  - Quick filters in persistent sidebar
-  - Bulk action toolbars
-```
-
----
-
-## Phase 4: Mobile App Specific Features
-
-### 4.1 Native Gestures
-```text
-  - Edge swipe to go back
-  - Pull to refresh with custom Islamic loader
-  - Swipe to dismiss modals/sheets
-  - Pinch to zoom on maps/images
-  - Long press for quick actions
-```
-
-### 4.2 Haptic Feedback
-```text
-Points of feedback:
-  - Navigation taps
-  - Form submissions
-  - Booking confirmations
-  - Error states
-  - Pull to refresh threshold
-  - Slider value changes
-```
-
-### 4.3 Custom App Icon & Splash
-```text
-App Icon:
-  - Multiple variants (light/dark)
-  - Arabic calligraphy "و" (Wakilni)
-  - Emerald/gold gradient background
-  
-Splash Screen:
-  - Animated logo reveal
-  - Islamic geometric pattern fade
-  - Loading progress indicator
-```
-
-### 4.4 Widgets (iOS/Android)
-```text
-  - Prayer times widget
-  - Active booking status
-  - Quick booking action
-```
-
----
-
-## Phase 5: Web-Specific Enhancements
-
-### 5.1 Desktop Sidebar
-```text
-  - Collapsible with smooth animation
-  - Mini mode shows icons only
-  - Hover tooltips in mini mode
-  - Active route indicator animation
-  - User profile card at bottom
-```
-
-### 5.2 Keyboard Navigation
-```text
-  - Full keyboard accessibility
-  - Shortcut hints in tooltips
-  - Command palette (Cmd+K)
-  - Focus visible states styled beautifully
-```
-
-### 5.3 Responsive Breakpoints
-```text
-  - Mobile: < 640px (phone)
-  - Tablet: 640-1024px (iPad)
-  - Desktop: 1024-1440px (laptop)
-  - Wide: > 1440px (monitor)
-  
-  Each breakpoint has tailored layout, not just scaled
-```
-
----
-
-## Phase 6: Illustrations & Empty States
-
-### 6.1 Custom Illustration Set
-```text
-Style:
-  - Flat with subtle gradients
-  - Islamic geometric elements incorporated
-  - Consistent character style (abstract, modest)
-  - Emerald/gold/cream palette
-
-Scenes Needed:
-  - Empty bookings
-  - Empty beneficiaries
-  - Success states
-  - Error states
-  - Onboarding slides
-  - Loading states
-  - 404 page
-```
-
-### 6.2 Animated Loaders
-```text
-  - Spinning Kaaba outline
-  - Orbiting prayer beads
-  - Pulsing crescent moon
-  - Geometric pattern morph
-```
+### G. Settings & Profile (2 Screens)
+1. Profile Settings
+2. Vendor KYC
 
 ---
 
 ## Technical Implementation
 
-### New Files to Create
+### 1. Ritual Event Recorder (Major Redesign)
+
+The ritual recording interface becomes a full-screen, immersive experience:
+
+```text
+Current State:
+  - Standard card-based UI
+  - Basic step list
+  - Simple progress bar
+
+New Design:
+  - Full-screen recording mode
+  - Large camera/GPS capture area
+  - Floating step indicator
+  - Live GPS signal strength display
+  - Audio waveform for dua recording
+  - Haptic feedback on step completion
+  - Celebration animation on ritual complete
+```
+
+**New Features:**
+- Swipe between ritual steps
+- Photo/video capture with EXIF preservation
+- Audio recorder with visual waveform
+- Real-time GPS accuracy indicator
+- Step-by-step guided checklist overlay
+- Beneficiary name mention detection
+- Offline mode with sync indicator
+
+### 2. Provider Dashboard (Enhancement)
+
+```text
+New Widget Layout:
+  - Hero earnings card with sparkline graph
+  - Today's schedule timeline (vertical)
+  - Pending actions with urgency badges
+  - Performance ring charts (completion %, response time)
+  - Quick action floating button
+```
+
+**New Features:**
+- Earnings breakdown by service type
+- Calendar mini-view with booking dots
+- Real-time notification badges
+- Swipe to access quick actions
+
+### 3. Admin Dashboard (Command Center)
+
+```text
+New Design:
+  - Dark theme option
+  - Data-dense widget grid
+  - Real-time counters with animations
+  - Quick filters in persistent sidebar
+  - Bulk action toolbar
+  - System health indicators
+```
+
+**New Features:**
+- Live activity feed
+- Quick search (Cmd+K style)
+- Filter presets for common queries
+- One-click exports
+
+### 4. Bookings List Page
+
+```text
+Current State:
+  - Basic card list
+  - Simple status filter
+
+New Design:
+  - Tab bar (All/Pending/Active/Completed)
+  - Pull-to-refresh with custom loader
+  - Swipeable booking cards (reveal actions)
+  - Status timeline visualization on cards
+  - Floating "New Booking" button
+```
+
+**New Features:**
+- Swipe left: Cancel/Dispute
+- Swipe right: Message provider
+- Long press: Quick status view
+- Search with voice input
+
+### 5. Booking Detail Page
+
+```text
+Current State:
+  - MainLayout wrapper
+  - Basic tabs (Timeline/Proofs/Messages)
+
+New Design:
+  - DashboardLayout (consistent nav)
+  - Premium glass cards
+  - Full-screen proof gallery view
+  - Inline chat interface
+  - Status action sheet (bottom)
+  - Print certificate button
+```
+
+**New Features:**
+- Pinch-to-zoom on proofs
+- Voice message recording
+- Real-time message sync
+- Certificate download/share
+
+### 6. Beneficiaries Page
+
+```text
+New Design:
+  - Card carousel for mobile (swipe)
+  - Grid for desktop
+  - Add button with animated icon
+  - Status badges (living/deceased)
+  - Avatar with relationship icon
+  - Quick edit sheet (bottom)
+```
+
+**New Features:**
+- Swipe to delete (with undo toast)
+- Photo upload for beneficiary
+- Relationship selector with icons
+- Duplicate detection warning
+
+### 7. Services Browse Page
+
+```text
+Current State:
+  - MainLayout wrapper
+  - Standard filter sidebar
+
+New Design:
+  - DashboardLayout for authenticated users
+  - Horizontal category tabs (swipeable)
+  - Service cards with parallax images
+  - Floating filter button (opens sheet)
+  - Provider mini-profile in card
+  - Price comparison mode
+```
+
+**New Features:**
+- Wishlist/favorites
+- Recently viewed
+- Compare up to 3 services
+- Filter by availability dates
+
+### 8. KYC Queue (Admin)
+
+```text
+Current State:
+  - MainLayout wrapper
+  - Tab-based status view
+
+New Design:
+  - DashboardLayout
+  - Kanban-style columns (drag to approve)
+  - Document preview modal
+  - Quick approve/reject actions
+  - Batch selection mode
+  - Rejection templates
+```
+
+**New Features:**
+- Drag card to status column
+- Bulk approve selected
+- Document zoom viewer
+- Copy rejection reason templates
+
+### 9. Donations Page
+
+```text
+Current State:
+  - Good structure, MainLayout
+
+New Design:
+  - DashboardLayout for authenticated users
+  - Impact visualization (lives helped)
+  - Live donation counter animation
+  - Goal progress with celebration at milestones
+  - Donor wall (optional display)
+  - Zakat calculator widget
+```
+
+**New Features:**
+- Recurring donation option
+- Dedicate to beneficiary
+- Share donation receipt
+- Tax receipt generation
+
+### 10. Profile Settings
+
+```text
+Current State:
+  - Functional tabs
+  - Basic form layout
+
+New Design:
+  - Glass card sections
+  - Avatar with camera overlay
+  - Animated toggle switches
+  - Push notification test button
+  - Offline sync status widget
+  - Account security section
+```
+
+**New Features:**
+- Password change flow
+- Two-factor setup
+- Session management
+- Data export (GDPR)
+
+### 11. Analytics (Super Admin)
+
+```text
+Current State:
+  - Mock data charts
+  - Basic layout
+
+New Design:
+  - Dark theme default
+  - Full-width chart cards
+  - Interactive drill-down charts
+  - Real-time data indicators
+  - Export to PDF/CSV
+  - Date range picker
+```
+
+**New Features:**
+- Chart type toggle (line/bar/area)
+- Custom date ranges
+- Compare periods
+- Automated insights/alerts
+
+### 12. Audit Logs (Super Admin)
+
+```text
+Current State:
+  - Table-based view
+  - Filter by entity type
+
+New Design:
+  - Timeline view option
+  - Color-coded action types
+  - Actor profile cards
+  - JSON diff viewer for changes
+  - Real-time log stream
+  - Advanced search (by date, actor, entity)
+```
+
+**New Features:**
+- Export logs
+- Create alerts for specific actions
+- Pin important logs
+- Bulk archive
+
+---
+
+## Shared Component Upgrades
+
+### All Screens Will Use:
+
+1. **DashboardLayout** - Consistent navigation
+2. **GlassCard** - Premium card styling
+3. **StatCard** - Gradient stats display
+4. **EmptyState** - Illustrated empty placeholders
+5. **LoadingState** - Skeleton + shimmer
+6. **ErrorState** - Retry with illustration
+7. **PullToRefresh** - Mobile refresh gesture
+
+### New Shared Components to Create:
+
+```text
+src/components/
+  data-display/
+    - DataTable.tsx          # Sortable, filterable table
+    - Timeline.tsx           # Vertical activity timeline
+    - KanbanBoard.tsx        # Drag-and-drop columns
+    - RingChart.tsx          # Circular progress
+    - SparklineChart.tsx     # Inline trend graph
+  
+  navigation/
+    - TabsNav.tsx            # Swipeable tabs
+    - FloatingActionButton.tsx
+    - BottomSheet.tsx        # iOS-style action sheet
+    - Breadcrumbs.tsx        # Navigation breadcrumbs
+  
+  media/
+    - PhotoCapture.tsx       # Camera interface
+    - AudioRecorder.tsx      # Voice recording with waveform
+    - ImageGallery.tsx       # Full-screen gallery
+    - DocumentViewer.tsx     # PDF/image preview
+  
+  feedback/
+    - Toast.tsx              # Enhanced toast with actions
+    - ConfirmDialog.tsx      # Confirmation with illustration
+    - SuccessCelebration.tsx # Confetti + sound
+```
+
+---
+
+## Layout Fixes
+
+**Current Issue:** Many pages use `MainLayout` instead of `DashboardLayout`
+
+**Fix Required:**
+```text
+Pages using MainLayout (need migration):
+  - KycQueuePage.tsx
+  - BookingDetailPage.tsx
+  - ServicesPage.tsx (public)
+  - ProviderServicesPage.tsx
+  - ProviderProfilePage.tsx
+  - CertificateVerificationPage.tsx
+```
+
+**Migration Pattern:**
+```typescript
+// Before
+import { MainLayout } from '@/components/layout';
+<MainLayout>...</MainLayout>
+
+// After
+import { DashboardLayout } from '@/components/layout/DashboardLayout';
+<DashboardLayout>...</DashboardLayout>
+```
+
+---
+
+## Role-Specific Features
+
+### Traveler Screens:
+- Prayer times widget
+- Qibla compass
+- Booking status tracker
+- Beneficiary quick-add
+
+### Provider Screens:
+- Earnings dashboard with trends
+- Schedule calendar with drag
+- Ritual recording full-screen mode
+- Performance analytics
+
+### Vendor Screens:
+- Team management grid
+- Subscription billing info
+- Provider roster with status
+- Revenue by provider breakdown
+
+### Admin Screens:
+- Bulk actions on all tables
+- Quick filters sidebar
+- Activity feed
+- System alerts panel
+
+### Super Admin Screens:
+- Dark mode toggle
+- Platform health dashboard
+- Configuration management
+- Database statistics
+
+---
+
+## Animation Enhancements
+
+### Page Transitions:
+```css
+/* Enter from right */
+.page-enter {
+  animation: slide-in-right 300ms var(--spring-bounce);
+}
+
+/* Exit to left */
+.page-exit {
+  animation: slide-out-left 250ms ease-out;
+}
+```
+
+### Card Interactions:
+```css
+/* Tap feedback */
+.card-tap {
+  transition: transform 150ms var(--spring-bounce);
+}
+.card-tap:active {
+  transform: scale(0.98);
+}
+
+/* Swipe reveal */
+.swipe-action {
+  transition: transform 200ms ease-out;
+}
+```
+
+### Status Changes:
+```css
+/* Status badge pulse */
+@keyframes status-update {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+```
+
+---
+
+## Files to Create
+
 ```text
 src/
-├── styles/
-│   ├── design-tokens.css      # All CSS variables
-│   ├── animations.css         # Keyframes and classes
-│   └── utilities.css          # Custom utilities
-├── components/
-│   ├── app-shell/
-│   │   ├── AppHeader.tsx      # Collapsing mobile header
-│   │   ├── TabBar.tsx         # Floating bottom nav
-│   │   └── Sidebar.tsx        # Desktop sidebar v2
-│   ├── cards/
-│   │   ├── GlassCard.tsx
-│   │   ├── ServiceCard.tsx
-│   │   ├── BookingCard.tsx
-│   │   └── StatCard.tsx
-│   ├── feedback/
-│   │   ├── EmptyState.tsx
-│   │   ├── LoadingState.tsx
-│   │   └── ErrorState.tsx
-│   └── illustrations/
-│       └── (SVG components)
-├── hooks/
-│   ├── useSpringAnimation.ts
-│   ├── useHaptics.ts
-│   └── useGestures.ts
-└── pages/ (updated layouts)
+  components/
+    data-display/
+      DataTable.tsx
+      Timeline.tsx
+      RingChart.tsx
+      SparklineChart.tsx
+    navigation/
+      FloatingActionButton.tsx
+      BottomSheet.tsx
+      SwipeableTabs.tsx
+    media/
+      PhotoCapture.tsx
+      AudioRecorder.tsx
+      ImageGallery.tsx
+    rituals/
+      FullScreenRecorder.tsx      # Immersive ritual recording
+      RitualStepCard.tsx          # Individual step display
+      GPSIndicator.tsx            # Signal strength display
+      DuaRecorder.tsx             # Audio recording component
+  
+  hooks/
+    useSwipeActions.ts            # Swipe gesture handler
+    useAudioRecorder.ts           # Voice recording logic
+    usePhotoCapture.ts            # Camera interface
 ```
 
-### Files to Modify
+## Files to Modify
+
 ```text
-- src/index.css (design system overhaul)
-- tailwind.config.ts (new tokens)
-- All page components (layout updates)
-- All dashboard components (new card designs)
-- src/components/layout/* (new shell components)
+All dashboard pages:
+  - src/pages/dashboard/ProviderDashboard.tsx
+  - src/pages/dashboard/AdminDashboard.tsx
+  - src/pages/dashboard/VendorDashboard.tsx
+
+All booking pages:
+  - src/pages/bookings/BookingsPage.tsx
+  - src/pages/bookings/BookingDetailPage.tsx
+
+All provider pages:
+  - src/pages/provider/ServicesPage.tsx
+  - src/pages/provider/AvailabilityPage.tsx
+  - src/pages/provider/KycPage.tsx
+  - src/pages/provider/ReviewsPage.tsx
+
+All admin pages:
+  - src/pages/admin/KycQueuePage.tsx
+  - src/pages/admin/ProvidersManagementPage.tsx
+  - src/pages/admin/UsersManagementPage.tsx
+  - src/pages/admin/DonationsPage.tsx
+  - src/pages/admin/SubscriptionsPage.tsx
+  - src/pages/admin/ScholarVerificationPage.tsx
+
+All super-admin pages:
+  - src/pages/super-admin/AnalyticsPage.tsx
+  - src/pages/super-admin/AuditLogsPage.tsx
+  - src/pages/super-admin/SystemSettingsPage.tsx
+
+Traveler pages:
+  - src/pages/beneficiaries/BeneficiariesPage.tsx
+  - src/pages/services/ServicesPage.tsx
+  - src/pages/donate/DonatePage.tsx
+
+Settings:
+  - src/pages/settings/ProfileSettingsPage.tsx
+
+Ritual components:
+  - src/components/rituals/RitualEventRecorder.tsx (major refactor)
 ```
 
 ---
 
-## Implementation Priority
+## Implementation Order
 
-### Week 1-2: Foundation
-1. Design tokens and CSS variables
-2. New typography system
-3. Shadow and depth system
-4. Animation utilities
+### Week 1: Core Components + Layout Fixes
+1. Create new shared components (DataTable, Timeline, FloatingActionButton)
+2. Fix all MainLayout -> DashboardLayout migrations
+3. Apply GlassCard styling to all pages
+4. Add PullToRefresh to all list pages
 
-### Week 3-4: Core Components
-1. New card components (Glass, Service, Booking)
-2. App shell (Header, TabBar, Sidebar)
-3. Empty states and loaders
-4. Form component refinements
+### Week 2: Dashboard Redesigns
+1. Provider Dashboard with earnings sparkline
+2. Admin Dashboard command center
+3. Vendor Dashboard with team overview
+4. Traveler Dashboard enhancements
 
-### Week 5-6: Screen Redesigns
-1. Landing page overhaul
-2. Dashboard redesigns (all roles)
-3. Authentication flow polish
-4. Booking wizard redesign
+### Week 3: Ritual Interface + Provider Pages
+1. Full-screen Ritual Event Recorder
+2. Provider Services with better cards
+3. Availability Calendar with drag
+4. Reviews page with filters
 
-### Week 7-8: Polish & Native Features
-1. Gesture implementations
-2. Haptic feedback integration
-3. Performance optimization
-4. Accessibility audit
-5. Final visual QA
+### Week 4: Booking System + Admin Pages
+1. Bookings list with swipe actions
+2. Booking detail with inline chat
+3. KYC Queue with kanban
+4. All remaining admin pages
+
+### Week 5: Polish + Super Admin
+1. Analytics with real charts
+2. Audit logs with timeline view
+3. Settings refinements
+4. Final visual QA across all screens
 
 ---
 
-## Success Metrics
+## Success Criteria
 
-- **Visual Distinction**: Immediately recognizable as a premium mobile app
-- **Native Feel**: Users cannot tell it's a web app on mobile
-- **Performance**: First contentful paint < 1.5s
-- **Accessibility**: WCAG AA compliant
-- **User Feedback**: "This feels like a real app" sentiment
+- Every screen uses DashboardLayout
+- Every list has pull-to-refresh
+- Every card has tap feedback
+- Every action has haptic response
+- Every loading state shows skeleton
+- Every empty state has illustration
+- Every error state allows retry
+- Role themes applied consistently
+- RTL support on all screens
+- Mobile navigation works everywhere
