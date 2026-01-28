@@ -1,240 +1,520 @@
 
-
-# Wakilni — Full Platform Implementation Plan
-
-A faith-first, accessible platform enabling authorized proxies to perform Hajj & Umrah on behalf of those who cannot attend personally.
+# Wakilni Complete UI Redesign Plan
+## From Website to Professional Mobile App + Web Platform
 
 ---
 
-## Design Vision
+## Executive Summary
 
-**Faith-Inspired Premium Design**
-- Deep, rich color palette: emerald greens, warm golds, and cream backgrounds
-- Subtle Islamic geometric patterns as decorative elements
-- Elegant Arabic typography paired with clean English fonts
-- Generous whitespace and premium feel that conveys trust and spiritual significance
-- Full RTL support with seamless Arabic ↔ English toggle
+This plan transforms Wakilni from a website-like experience into a **professionally designed mobile app** with a companion web version. The redesign focuses on creating a native mobile-first experience while maintaining a polished desktop interface.
 
 ---
 
-## Phase 1: Foundation & Core Setup
+## Current State Analysis
 
-### 1.1 Design System & Layout
-- Premium component library with faith-inspired styling
-- Responsive layout system (mobile-first, works beautifully on all devices)
-- Bilingual infrastructure: Arabic (RTL) and English (LTR) with instant language switching
-- Shared navigation with role-based menu items
-- Accessible design following WCAG AA guidelines
+### What Exists Today
+- **Design System**: Faith-inspired color palette (emerald, gold, cream) with role-based themes
+- **Layout**: Sidebar navigation for desktop, bottom navigation for mobile
+- **Components**: Basic mobile-optimized cards, widgets, forms
+- **PWA**: Service worker, install prompts, offline support foundation
 
-### 1.2 Authentication System
-- Multi-method signup/login:
-  - Email & password
-  - Phone number with SMS OTP verification
-  - Google Sign-in
-- Role selection during onboarding (Traveler or Provider)
-- Phone verification for all users (required for bookings)
-- Profile management with ID document upload capability
-
-### 1.3 Database Schema
-- Users table (core identity, linked to Supabase Auth)
-- Separate user_roles table for RBAC (Admin, Traveler, Provider)
-- Beneficiaries table (people receiving proxy services)
-- Providers table (certified service providers with KYC status)
-- Services table (Umrah, Hajj, Ziyarat offerings)
-- Bookings table with full lifecycle status tracking
-- Transactions table (payment records)
-- Booking activities table (audit trail)
-- Reviews table (post-service feedback)
-- Messages table (in-app communication)
+### Key Issues Identified
+1. **Website Feel**: Cards and layouts feel like web components, not native app elements
+2. **Generic Typography**: Missing the premium, refined typography mobile apps use
+3. **Shallow Animations**: Basic transitions without the spring physics and depth of native apps
+4. **Icon Design**: Standard Lucide icons lack custom branding and personality
+5. **Visual Hierarchy**: Flat design without layered depth (shadows, blurs, gradients)
+6. **Navigation**: Functional but not immersive or gesture-driven
+7. **Empty States**: Generic placeholders instead of engaging illustrations
+8. **Onboarding**: No guided tour or first-run experience
 
 ---
 
-## Phase 2: Traveler Experience
+## Design Vision: "Sacred Simplicity"
 
-### 2.1 Traveler Dashboard
-- Overview of active and past bookings
-- Quick stats: bookings in progress, completed pilgrimages
-- Recent activity feed
-- Quick action buttons for common tasks
+**Philosophy**: Create an interface that feels like a high-end Islamic banking app or premium Quran app - reverent, trustworthy, and beautifully crafted.
 
-### 2.2 Beneficiary Management
-- Add/edit beneficiaries (name, date of birth, nationality, status)
-- Status categories: deceased, sick, elderly, disabled, other
-- Document upload for verification (ID, medical certificates)
-- Beneficiary listing with search and filters
-
-### 2.3 Service Discovery
-- Browse available services (Umrah, Hajj, Ziyarat)
-- Filter by service type, price range, provider rating
-- Provider profiles with certifications and reviews
-- Service detail pages with full description and pricing
-
-### 2.4 Booking Creation Wizard
-- Step-by-step guided flow:
-  1. Select service type
-  2. Choose a provider (with ratings and reviews)
-  3. Select or add beneficiary
-  4. Add special requests (wheelchair, medical assistance, etc.)
-  5. Review and confirm
-- Payment UI (mock Stripe integration, ready for real integration)
-- Booking confirmation with summary
-
-### 2.5 Booking Tracking
-- Real-time status updates (Pending → Accepted → In Progress → Completed)
-- Activity timeline showing all booking events
-- Provider proof gallery (photos from the rites)
-- In-app messaging with provider
+**Inspiration Sources**:
+- Apple Wallet / Health app (card-based, layered UI)
+- Quran Majeed / Muslim Pro (faith-inspired design)
+- Careem / Grab super-apps (seamless multi-service experience)
+- Wise / Revolut (clean fintech mobile design)
 
 ---
 
-## Phase 3: Provider Experience
+## Phase 1: Design System Overhaul
 
-### 3.1 Provider Onboarding & KYC
-- Provider registration with company details
-- Certification upload (religious training, licenses)
-- KYC status tracking (Pending → Under Review → Approved/Rejected)
-- Profile completion progress indicator
+### 1.1 Typography System
+```text
+Current:
+  Font: Inter + Amiri
+  Scale: Basic responsive sizing
 
-### 3.2 Provider Dashboard
-- Incoming booking requests
-- Active bookings with status
-- Earnings overview
-- Performance metrics (rating, completion rate)
+Proposed:
+  Headlines: SF Pro Display / Inter Display (weight 600-700)
+  Body: SF Pro Text / Inter (weight 400-500)
+  Arabic: Tajawal + Amiri (refined pairing)
+  Scale: Fluid type scale with clamp()
+  
+  Mobile Headlines: 24-32px (compact)
+  Desktop Headlines: 32-48px (expansive)
+  
+  Line Height: 1.2 for headlines, 1.5 for body
+  Letter Spacing: -0.02em for headlines
+```
 
-### 3.3 Service Management
-- Create/edit service offerings
-- Set pricing and duration
-- Manage availability calendar
-- Service capacity controls
+### 1.2 Color System Enhancement
+```text
+Add semantic colors:
+  --success: Emerald green
+  --warning: Warm amber
+  --error: Soft coral red
+  --info: Calm blue
+  
+Add depth layers:
+  --surface-0: Base background
+  --surface-1: Card level
+  --surface-2: Elevated modal level
+  --surface-3: Top-level overlay
+  
+Add gradients:
+  --gradient-sacred: Emerald to Teal
+  --gradient-gold: Amber to Gold
+  --gradient-twilight: Deep blue to Purple (night mode)
+```
 
-### 3.4 Booking Execution Flow
-- View incoming requests with beneficiary details
-- Accept or decline with reason
-- Status update workflow (mark as in progress, complete stages)
-- Proof upload (photos, videos from holy sites)
-- Mark as completed with summary
+### 1.3 Shadow & Depth System
+```text
+--shadow-xs: 0 1px 2px rgba(0,0,0,0.05)
+--shadow-sm: 0 2px 4px rgba(0,0,0,0.06)
+--shadow-md: 0 4px 12px rgba(0,0,0,0.08)
+--shadow-lg: 0 8px 24px rgba(0,0,0,0.12)
+--shadow-xl: 0 16px 48px rgba(0,0,0,0.16)
 
-### 3.5 Communication
-- In-app messaging with travelers
-- Notification center for booking updates
+Cards will have layered shadows creating visual depth
+```
 
----
-
-## Phase 4: Admin Console
-
-### 4.1 Admin Dashboard
-- Platform-wide analytics (bookings today, this month, revenue)
-- Key metrics visualized with charts
-- Recent activity across the platform
-- Alert indicators for items needing attention
-
-### 4.2 KYC & Provider Verification
-- Provider applications queue
-- Document review interface
-- Approve/reject with feedback
-- Verification status management
-
-### 4.3 Booking Oversight
-- All bookings list with advanced filters
-- Booking detail view with full audit trail
-- Status override capability for disputes
-- Manual assignment if provider unavailable
-
-### 4.4 User Management
-- User search and listing
-- Role management
-- Account status (active, suspended)
-- User detail view with activity history
-
-### 4.5 Dispute Resolution
-- Flagged bookings queue
-- Communication thread view
-- Resolution actions and notes
-
----
-
-## Phase 5: Platform Features
-
-### 5.1 In-App Messaging
-- Real-time messaging between Travelers ↔ Providers
-- Admin can join any conversation
-- Message history tied to bookings
-- Push notification for new messages
-
-### 5.2 Notification System
-- Push notifications (browser)
-- In-app notification center
-- Email notifications for critical events
-- Notification preferences per user
-
-### 5.3 Reviews & Ratings
-- Post-booking review prompt
-- Star rating (1-5) with written comment
-- Provider rating aggregation
-- Review display on provider profiles
-
-### 5.4 Basic Analytics (Admin)
-- Booking counts over time
-- Revenue tracking
-- Provider performance rankings
-- Completion rates and average times
+### 1.4 Motion & Animation System
+```text
+Spring Physics:
+  --spring-bounce: cubic-bezier(0.34, 1.56, 0.64, 1)
+  --spring-smooth: cubic-bezier(0.25, 0.46, 0.45, 0.94)
+  
+Durations:
+  --duration-fast: 150ms
+  --duration-normal: 250ms
+  --duration-slow: 400ms
+  
+Animations:
+  - Page transitions: Slide + fade with spring physics
+  - Card interactions: Scale + glow on press
+  - List items: Staggered entrance animations
+  - Loaders: Morphing shapes (Islamic patterns)
+```
 
 ---
 
-## Phase 6: Polish & Accessibility
+## Phase 2: Component Architecture Redesign
 
-### 6.1 Accessibility Compliance
-- WCAG AA for all critical flows
-- Keyboard navigation support
-- Screen reader compatibility
-- Large text and high contrast options
+### 2.1 App Shell Components
 
-### 6.2 Performance Optimization
-- Lazy loading for images and heavy content
-- Optimized database queries
-- Caching strategy for frequently accessed data
+**New Mobile Header**
+```text
+Features:
+  - Transparent/blurred background
+  - Large title that collapses on scroll (iOS-style)
+  - Avatar with status ring
+  - Notification badge with animation
+  - Contextual actions per screen
+```
 
-### 6.3 Error Handling & Feedback
-- Friendly error messages in both languages
-- Loading states and progress indicators
-- Toast notifications for actions
-- Empty states with helpful guidance
+**Enhanced Bottom Navigation**
+```text
+Features:
+  - Floating tab bar (8px from bottom, rounded)
+  - Active indicator: Pill shape with glow
+  - Center "action" button for quick booking
+  - Haptic feedback on tap
+  - Badge animations (bounce on update)
+  - Smooth morphing between states
+```
+
+**Gesture-Driven Navigation**
+```text
+  - Swipe back to navigate
+  - Pull down to refresh with custom animation
+  - Long press context menus
+  - Swipe actions on list items
+```
+
+### 2.2 Card Components
+
+**Glass Card**
+```text
+New premium card style:
+  - Frosted glass background (backdrop-blur)
+  - Subtle gradient border
+  - Inner glow on hover/active
+  - Elevation change on interaction
+```
+
+**Stat Card (Redesigned)**
+```text
+  - Large number with gradient text
+  - Subtle icon watermark in corner
+  - Trend indicator with animation
+  - Tap to expand for details
+```
+
+**Service Card**
+```text
+  - Full-width image with gradient overlay
+  - Floating price badge
+  - Provider avatar with verification badge
+  - Rating stars with gold fill animation
+  - "Book Now" button with pulse effect
+```
+
+**Booking Card**
+```text
+  - Status timeline visualization
+  - Beneficiary avatar prominent
+  - Provider connection indicator
+  - Live status badge
+  - Quick action buttons (message, track)
+```
+
+### 2.3 Form Components
+
+**Input Fields**
+```text
+  - Floating labels (rise on focus)
+  - Colored focus rings matching context
+  - Inline validation with animations
+  - Auto-suggestions in dropdowns
+  - Voice input option for accessibility
+```
+
+**Selection Components**
+```text
+  - Large touch targets (48px minimum)
+  - Radio/checkbox with custom animations
+  - Segment controls for binary choices
+  - Slider with haptic feedback at intervals
+```
 
 ---
 
-## Security & Compliance
+## Phase 3: Screen-by-Screen Redesign
 
-- Row-Level Security (RLS) on all tables
-- Separate user_roles table to prevent privilege escalation
-- Audit trail for all booking state changes
-- Secure file storage for documents
-- Phone verification for transaction security
+### 3.1 Landing Page (Web Focus)
+```text
+Structure:
+  1. Hero: Full-viewport with video/animated Kaaba imagery
+     - Floating navigation (transparent on scroll)
+     - Quranic verse with typewriter animation
+     - Two CTAs: "Start Journey" + "Learn More"
+     
+  2. Services: Horizontal scroll cards (mobile) / Grid (desktop)
+     - Each with ambient Islamic pattern animation
+     
+  3. How It Works: Vertical stepper with scroll-triggered animations
+     - Step icons animate in sequence
+     
+  4. Trust: Provider showcase carousel
+     - Verified badges, ratings, testimonials
+     
+  5. Faith: Islamic quotes section with parallax
+     
+  6. CTA: Full-width card with gradient, subtle pattern
+```
+
+### 3.2 Authentication Screens
+```text
+Login:
+  - Centered card with premium shadow
+  - Animated logo at top
+  - Social login options in button group
+  - Biometric login option (Face ID / Fingerprint visual)
+  - Forgot password inline expandable
+
+Signup:
+  - Multi-step wizard with horizontal progress
+  - Role selection as illustrated cards (not buttons)
+  - Each role has unique visual identity
+  - Form fields animate in sequence
+  - Real-time validation feedback
+```
+
+### 3.3 Traveler Dashboard
+```text
+Layout (Mobile):
+  - Collapsing header with greeting + avatar
+  - Islamic date/time widget (hero position)
+  - Quick actions: Large icon buttons in row
+  - Active bookings: Full-width cards
+  - Islamic tools: 2x3 grid with gradient backgrounds
+  - Recent activity: Timeline style
+
+Layout (Desktop):
+  - Split view: Main content + Islamic widgets sidebar
+  - Larger stat cards with charts
+  - Quick actions as command palette shortcut
+```
+
+### 3.4 Booking Flow (Complete Redesign)
+```text
+Step 1 - Service Selection:
+  - Full-screen cards with parallax images
+  - Swipe between Umrah / Hajj / Ziyarat
+  - Islamic geometric transition between cards
+
+Step 2 - Provider Selection:
+  - Map view option for geographic selection
+  - List view with rich provider cards
+  - Filters in bottom sheet (not modal)
+  - Comparison mode (select 2-3 to compare)
+
+Step 3 - Date Selection:
+  - Large calendar with availability colors
+  - Hijri/Gregorian toggle
+  - Time slots as horizontal scroll
+  - Selected date confirmation card
+
+Step 4 - Beneficiary:
+  - Existing: Card carousel selection
+  - New: Inline form that expands
+  - Relationship selector with illustrations
+
+Step 5 - Review:
+  - Receipt-style card design
+  - Edit buttons per section
+  - Total with breakdown expandable
+  - Special requests text area
+
+Step 6 - Payment:
+  - Payment method cards (Apple Pay style)
+  - Security badges prominent
+  - Escrow explanation tooltip
+  - Confirmation animation (confetti + success)
+```
+
+### 3.5 Provider App Experience
+```text
+Dashboard:
+  - Earnings hero with graph spark line
+  - Today's schedule timeline
+  - Pending actions with urgency indicators
+  - Performance ring charts
+
+Service Execution:
+  - Full-screen ritual recording interface
+  - Large camera capture button
+  - GPS status always visible
+  - Step-by-step checklist overlay
+  - Audio dua recorder with waveform
+
+Calendar:
+  - Month/week/day toggle
+  - Drag to reschedule
+  - Color-coded booking status
+  - Quick add availability slots
+```
+
+### 3.6 Admin Dashboard
+```text
+Design:
+  - Command center aesthetic
+  - Dark theme option for admins
+  - Data-dense but organized
+  - Real-time counters with animations
+  - Quick filters in persistent sidebar
+  - Bulk action toolbars
+```
 
 ---
 
-## What's Included
+## Phase 4: Mobile App Specific Features
 
-| Feature | Status |
-|---------|--------|
-| User registration & verification | ✅ Included |
-| Provider KYC workflow | ✅ Included |
-| Create proxy bookings | ✅ Included |
-| Full booking lifecycle | ✅ Included |
-| Payment UI (mock Stripe) | ✅ Included |
-| Real-time status updates | ✅ Included |
-| In-app messaging | ✅ Included |
-| Admin console | ✅ Included |
-| Basic analytics | ✅ Included |
-| Arabic & English + RTL | ✅ Included |
-| Stripe integration | 🔌 Ready (connect later) |
+### 4.1 Native Gestures
+```text
+  - Edge swipe to go back
+  - Pull to refresh with custom Islamic loader
+  - Swipe to dismiss modals/sheets
+  - Pinch to zoom on maps/images
+  - Long press for quick actions
+```
+
+### 4.2 Haptic Feedback
+```text
+Points of feedback:
+  - Navigation taps
+  - Form submissions
+  - Booking confirmations
+  - Error states
+  - Pull to refresh threshold
+  - Slider value changes
+```
+
+### 4.3 Custom App Icon & Splash
+```text
+App Icon:
+  - Multiple variants (light/dark)
+  - Arabic calligraphy "و" (Wakilni)
+  - Emerald/gold gradient background
+  
+Splash Screen:
+  - Animated logo reveal
+  - Islamic geometric pattern fade
+  - Loading progress indicator
+```
+
+### 4.4 Widgets (iOS/Android)
+```text
+  - Prayer times widget
+  - Active booking status
+  - Quick booking action
+```
 
 ---
 
-## Future Enhancements (v1.x)
+## Phase 5: Web-Specific Enhancements
 
-- Digital permit / proof-of-performance card
-- Live geo-tracking during rites
-- Donation flows and charity integration
-- Hajj season scheduling with capacity controls
-- PWA for mobile installation
+### 5.1 Desktop Sidebar
+```text
+  - Collapsible with smooth animation
+  - Mini mode shows icons only
+  - Hover tooltips in mini mode
+  - Active route indicator animation
+  - User profile card at bottom
+```
 
+### 5.2 Keyboard Navigation
+```text
+  - Full keyboard accessibility
+  - Shortcut hints in tooltips
+  - Command palette (Cmd+K)
+  - Focus visible states styled beautifully
+```
+
+### 5.3 Responsive Breakpoints
+```text
+  - Mobile: < 640px (phone)
+  - Tablet: 640-1024px (iPad)
+  - Desktop: 1024-1440px (laptop)
+  - Wide: > 1440px (monitor)
+  
+  Each breakpoint has tailored layout, not just scaled
+```
+
+---
+
+## Phase 6: Illustrations & Empty States
+
+### 6.1 Custom Illustration Set
+```text
+Style:
+  - Flat with subtle gradients
+  - Islamic geometric elements incorporated
+  - Consistent character style (abstract, modest)
+  - Emerald/gold/cream palette
+
+Scenes Needed:
+  - Empty bookings
+  - Empty beneficiaries
+  - Success states
+  - Error states
+  - Onboarding slides
+  - Loading states
+  - 404 page
+```
+
+### 6.2 Animated Loaders
+```text
+  - Spinning Kaaba outline
+  - Orbiting prayer beads
+  - Pulsing crescent moon
+  - Geometric pattern morph
+```
+
+---
+
+## Technical Implementation
+
+### New Files to Create
+```text
+src/
+├── styles/
+│   ├── design-tokens.css      # All CSS variables
+│   ├── animations.css         # Keyframes and classes
+│   └── utilities.css          # Custom utilities
+├── components/
+│   ├── app-shell/
+│   │   ├── AppHeader.tsx      # Collapsing mobile header
+│   │   ├── TabBar.tsx         # Floating bottom nav
+│   │   └── Sidebar.tsx        # Desktop sidebar v2
+│   ├── cards/
+│   │   ├── GlassCard.tsx
+│   │   ├── ServiceCard.tsx
+│   │   ├── BookingCard.tsx
+│   │   └── StatCard.tsx
+│   ├── feedback/
+│   │   ├── EmptyState.tsx
+│   │   ├── LoadingState.tsx
+│   │   └── ErrorState.tsx
+│   └── illustrations/
+│       └── (SVG components)
+├── hooks/
+│   ├── useSpringAnimation.ts
+│   ├── useHaptics.ts
+│   └── useGestures.ts
+└── pages/ (updated layouts)
+```
+
+### Files to Modify
+```text
+- src/index.css (design system overhaul)
+- tailwind.config.ts (new tokens)
+- All page components (layout updates)
+- All dashboard components (new card designs)
+- src/components/layout/* (new shell components)
+```
+
+---
+
+## Implementation Priority
+
+### Week 1-2: Foundation
+1. Design tokens and CSS variables
+2. New typography system
+3. Shadow and depth system
+4. Animation utilities
+
+### Week 3-4: Core Components
+1. New card components (Glass, Service, Booking)
+2. App shell (Header, TabBar, Sidebar)
+3. Empty states and loaders
+4. Form component refinements
+
+### Week 5-6: Screen Redesigns
+1. Landing page overhaul
+2. Dashboard redesigns (all roles)
+3. Authentication flow polish
+4. Booking wizard redesign
+
+### Week 7-8: Polish & Native Features
+1. Gesture implementations
+2. Haptic feedback integration
+3. Performance optimization
+4. Accessibility audit
+5. Final visual QA
+
+---
+
+## Success Metrics
+
+- **Visual Distinction**: Immediately recognizable as a premium mobile app
+- **Native Feel**: Users cannot tell it's a web app on mobile
+- **Performance**: First contentful paint < 1.5s
+- **Accessibility**: WCAG AA compliant
+- **User Feedback**: "This feels like a real app" sentiment
