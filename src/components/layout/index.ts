@@ -3,3 +3,7 @@ export { Header } from './Header';
 export { Footer } from './Footer';
 export { DashboardLayout } from './DashboardLayout';
 export { DashboardSidebar } from './DashboardSidebar';
+export { EnhancedHeader } from './EnhancedHeader';
+export { EnhancedFooter } from './EnhancedFooter';
+export { EnhancedSidebar } from './EnhancedSidebar';
+export { MobileBottomNav } from './MobileBottomNav';
