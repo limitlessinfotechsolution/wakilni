@@ -1,5 +1,9 @@
-import { useState } from 'react';
-import { FileText, User, Clock, Filter, Search, RefreshCw } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { 
+  FileText, User, Clock, Filter, Search, RefreshCw, Shield, 
+  UserPlus, UserMinus, CheckCircle, XCircle, CreditCard,
+  Building2, UserCheck, AlertTriangle, Activity, Download
+} from 'lucide-react';
 import { MainLayout } from '@/components/layout';
 import { useLanguage } from '@/lib/i18n';
 import { useAuditLogs } from '@/hooks/useAuditLogs';
@@ -8,6 +12,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Separator } from '@/components/ui/separator';
 import {
   Table,
   TableBody,
@@ -35,7 +41,9 @@ import {
   AlertDescription,
   AlertTitle,
 } from '@/components/ui/alert';
-import { AlertTriangle } from 'lucide-react';
+import { format } from 'date-fns';
+import { ar } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
 
 export default function AuditLogsPage() {
   const { isRTL } = useLanguage();
@@ -50,38 +58,102 @@ export default function AuditLogsPage() {
     limit: 200,
   });
 
-  const filteredLogs = logs.filter(log => {
-    if (!searchQuery) return true;
-    const action = log.action.toLowerCase();
-    const entityType = log.entity_type.toLowerCase();
-    return action.includes(searchQuery.toLowerCase()) || 
-           entityType.includes(searchQuery.toLowerCase());
-  });
+  const filteredLogs = useMemo(() => {
+    return logs.filter(log => {
+      if (!searchQuery) return true;
+      const action = log.action.toLowerCase();
+      const entityType = log.entity_type.toLowerCase();
+      return action.includes(searchQuery.toLowerCase()) || 
+             entityType.includes(searchQuery.toLowerCase());
+    });
+  }, [logs, searchQuery]);
+
+  // Stats
+  const stats = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const todayLogs = logs.filter(l => new Date(l.created_at) >= today);
+    const userActions = logs.filter(l => l.entity_type === 'user').length;
+    const subscriptionActions = logs.filter(l => l.entity_type === 'subscription').length;
+    const kycActions = logs.filter(l => 
+      l.action.includes('kyc') || l.action.includes('approved') || l.action.includes('rejected')
+    ).length;
+
+    return { todayLogs: todayLogs.length, userActions, subscriptionActions, kycActions };
+  }, [logs]);
+
+  const getActionIcon = (action: string) => {
+    if (action.includes('created') || action.includes('add')) return <UserPlus className="h-4 w-4" />;
+    if (action.includes('deleted') || action.includes('remove')) return <UserMinus className="h-4 w-4" />;
+    if (action.includes('approved')) return <CheckCircle className="h-4 w-4" />;
+    if (action.includes('rejected') || action.includes('suspended')) return <XCircle className="h-4 w-4" />;
+    if (action.includes('subscription')) return <CreditCard className="h-4 w-4" />;
+    if (action.includes('role')) return <Shield className="h-4 w-4" />;
+    return <Activity className="h-4 w-4" />;
+  };
 
   const getActionBadge = (action: string) => {
-    if (action.includes('create') || action.includes('add')) {
-      return <Badge className="bg-green-500">{action}</Badge>;
+    if (action.includes('created') || action.includes('add') || action.includes('approved') || action.includes('activated')) {
+      return (
+        <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300 gap-1">
+          {getActionIcon(action)}
+          {action.replace(/_/g, ' ')}
+        </Badge>
+      );
     }
-    if (action.includes('delete') || action.includes('remove')) {
-      return <Badge variant="destructive">{action}</Badge>;
+    if (action.includes('deleted') || action.includes('remove') || action.includes('rejected') || action.includes('suspended')) {
+      return (
+        <Badge className="bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300 gap-1">
+          {getActionIcon(action)}
+          {action.replace(/_/g, ' ')}
+        </Badge>
+      );
     }
-    if (action.includes('update') || action.includes('edit')) {
-      return <Badge className="bg-blue-500">{action}</Badge>;
+    if (action.includes('update') || action.includes('change') || action.includes('extended')) {
+      return (
+        <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 gap-1">
+          {getActionIcon(action)}
+          {action.replace(/_/g, ' ')}
+        </Badge>
+      );
     }
-    if (action.includes('suspend') || action.includes('reject')) {
-      return <Badge variant="destructive">{action}</Badge>;
-    }
-    if (action.includes('approve')) {
-      return <Badge className="bg-green-500">{action}</Badge>;
-    }
-    return <Badge variant="outline">{action}</Badge>;
+    return (
+      <Badge variant="outline" className="gap-1">
+        {getActionIcon(action)}
+        {action.replace(/_/g, ' ')}
+      </Badge>
+    );
   };
 
   const getRoleBadge = (role: string | null) => {
     switch (role) {
-      case 'super_admin': return <Badge className="bg-red-500 text-white">Super Admin</Badge>;
-      case 'admin': return <Badge className="bg-purple-500 text-white">Admin</Badge>;
-      default: return <Badge variant="outline">{role || 'Unknown'}</Badge>;
+      case 'super_admin': 
+        return (
+          <Badge className="bg-gradient-to-r from-red-500 to-pink-500 text-white">
+            <Shield className="h-3 w-3 mr-1" />
+            Super Admin
+          </Badge>
+        );
+      case 'admin': 
+        return (
+          <Badge className="bg-gradient-to-r from-purple-500 to-indigo-500 text-white">
+            <Shield className="h-3 w-3 mr-1" />
+            Admin
+          </Badge>
+        );
+      default: 
+        return <Badge variant="outline">{role || 'Unknown'}</Badge>;
+    }
+  };
+
+  const getEntityIcon = (entityType: string) => {
+    switch (entityType) {
+      case 'user': return <User className="h-4 w-4" />;
+      case 'provider': return <UserCheck className="h-4 w-4" />;
+      case 'vendor': return <Building2 className="h-4 w-4" />;
+      case 'subscription': return <CreditCard className="h-4 w-4" />;
+      default: return <FileText className="h-4 w-4" />;
     }
   };
 
@@ -111,21 +183,97 @@ export default function AuditLogsPage() {
   return (
     <MainLayout>
       <div className="container py-8 px-4">
+        {/* Islamic Header */}
+        <div className="text-center mb-6">
+          <p className="text-xs text-muted-foreground font-arabic mb-2">
+            إِنَّ اللَّهَ كَانَ عَلَيْكُمْ رَقِيبًا
+          </p>
+        </div>
+
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <div>
-            <h1 className={`text-2xl font-bold flex items-center gap-2 ${isRTL ? 'font-arabic' : ''}`}>
-              <FileText className="h-6 w-6" />
+            <h1 className={cn('text-2xl font-bold flex items-center gap-2', isRTL && 'font-arabic')}>
+              <FileText className="h-6 w-6 text-primary" />
               {isRTL ? 'سجل التدقيق' : 'Audit Logs'}
             </h1>
-            <p className="text-muted-foreground text-sm">
-              {isRTL ? 'تتبع جميع الإجراءات على المنصة' : 'Track all actions on the platform'}
+            <p className="text-muted-foreground text-sm mt-1">
+              {isRTL ? 'تتبع جميع الإجراءات الإدارية على المنصة' : 'Track all administrative actions on the platform'}
             </p>
           </div>
-          <Button variant="outline" onClick={refetch}>
-            <RefreshCw className="h-4 w-4 mr-2" />
-            {isRTL ? 'تحديث' : 'Refresh'}
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={refetch}>
+              <RefreshCw className="h-4 w-4 mr-2" />
+              {isRTL ? 'تحديث' : 'Refresh'}
+            </Button>
+          </div>
+        </div>
+
+        {/* Stats Cards */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900 border-blue-200">
+            <CardContent className="pt-4 pb-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-muted-foreground uppercase tracking-wider">
+                    {isRTL ? 'اليوم' : 'Today'}
+                  </p>
+                  <p className="text-2xl font-bold text-blue-700 dark:text-blue-300">{stats.todayLogs}</p>
+                </div>
+                <div className="p-2 rounded-full bg-blue-200 dark:bg-blue-800">
+                  <Activity className="h-5 w-5 text-blue-600 dark:text-blue-300" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950 dark:to-purple-900 border-purple-200">
+            <CardContent className="pt-4 pb-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-muted-foreground uppercase tracking-wider">
+                    {isRTL ? 'المستخدمين' : 'User Actions'}
+                  </p>
+                  <p className="text-2xl font-bold text-purple-700 dark:text-purple-300">{stats.userActions}</p>
+                </div>
+                <div className="p-2 rounded-full bg-purple-200 dark:bg-purple-800">
+                  <User className="h-5 w-5 text-purple-600 dark:text-purple-300" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950 dark:to-green-900 border-green-200">
+            <CardContent className="pt-4 pb-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-muted-foreground uppercase tracking-wider">
+                    {isRTL ? 'التحقق' : 'KYC Reviews'}
+                  </p>
+                  <p className="text-2xl font-bold text-green-700 dark:text-green-300">{stats.kycActions}</p>
+                </div>
+                <div className="p-2 rounded-full bg-green-200 dark:bg-green-800">
+                  <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-300" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-950 dark:to-amber-900 border-amber-200">
+            <CardContent className="pt-4 pb-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-muted-foreground uppercase tracking-wider">
+                    {isRTL ? 'الاشتراكات' : 'Subscriptions'}
+                  </p>
+                  <p className="text-2xl font-bold text-amber-700 dark:text-amber-300">{stats.subscriptionActions}</p>
+                </div>
+                <div className="p-2 rounded-full bg-amber-200 dark:bg-amber-800">
+                  <CreditCard className="h-5 w-5 text-amber-600 dark:text-amber-300" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Filters */}
@@ -151,8 +299,8 @@ export default function AuditLogsPage() {
                   <SelectItem value="user">{isRTL ? 'المستخدمين' : 'Users'}</SelectItem>
                   <SelectItem value="provider">{isRTL ? 'مقدمي الخدمات' : 'Providers'}</SelectItem>
                   <SelectItem value="vendor">{isRTL ? 'الوكلاء' : 'Vendors'}</SelectItem>
+                  <SelectItem value="subscription">{isRTL ? 'الاشتراكات' : 'Subscriptions'}</SelectItem>
                   <SelectItem value="booking">{isRTL ? 'الحجوزات' : 'Bookings'}</SelectItem>
-                  <SelectItem value="donation">{isRTL ? 'التبرعات' : 'Donations'}</SelectItem>
                   <SelectItem value="system">{isRTL ? 'النظام' : 'System'}</SelectItem>
                 </SelectContent>
               </Select>
@@ -163,65 +311,83 @@ export default function AuditLogsPage() {
         {/* Logs Table */}
         <Card>
           <CardHeader>
-            <CardTitle>{isRTL ? 'سجلات النشاط' : 'Activity Logs'}</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <Activity className="h-5 w-5 text-primary" />
+              {isRTL ? 'سجلات النشاط' : 'Activity Logs'}
+            </CardTitle>
             <CardDescription>
               {isRTL ? `إجمالي: ${filteredLogs.length} سجل` : `Total: ${filteredLogs.length} logs`}
             </CardDescription>
           </CardHeader>
           <CardContent>
             {isLoading ? (
-              <div className="flex items-center justify-center py-8">
-                <div className="animate-pulse text-muted-foreground">
-                  {isRTL ? 'جاري التحميل...' : 'Loading...'}
+              <div className="flex items-center justify-center py-12">
+                <div className="flex flex-col items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center animate-pulse">
+                    <Activity className="h-5 w-5 text-primary" />
+                  </div>
+                  <p className="text-muted-foreground animate-pulse">
+                    {isRTL ? 'جاري التحميل...' : 'Loading...'}
+                  </p>
                 </div>
               </div>
             ) : filteredLogs.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-8 text-center">
-                <FileText className="h-10 w-10 text-muted-foreground mb-3" />
-                <p className="text-muted-foreground">
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <FileText className="h-12 w-12 text-muted-foreground mb-4" />
+                <p className="text-muted-foreground font-medium">
                   {isRTL ? 'لا توجد سجلات' : 'No logs found'}
+                </p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {isRTL ? 'ستظهر السجلات عند إجراء عمليات إدارية' : 'Logs will appear when administrative actions are performed'}
                 </p>
               </div>
             ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>{isRTL ? 'الوقت' : 'Time'}</TableHead>
-                    <TableHead>{isRTL ? 'المنفذ' : 'Actor'}</TableHead>
-                    <TableHead>{isRTL ? 'الإجراء' : 'Action'}</TableHead>
-                    <TableHead>{isRTL ? 'نوع الكيان' : 'Entity'}</TableHead>
-                    <TableHead className="text-right">{isRTL ? 'التفاصيل' : 'Details'}</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredLogs.map((log) => (
-                    <TableRow key={log.id}>
-                      <TableCell className="text-sm text-muted-foreground">
-                        <div className="flex items-center gap-1">
-                          <Clock className="h-3 w-3" />
-                          {new Date(log.created_at).toLocaleString()}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        {getRoleBadge(log.actor_role)}
-                      </TableCell>
-                      <TableCell>{getActionBadge(log.action)}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline">{log.entity_type}</Badge>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Button 
-                          size="sm" 
-                          variant="ghost"
-                          onClick={() => openDetails(log)}
-                        >
-                          {isRTL ? 'عرض' : 'View'}
-                        </Button>
-                      </TableCell>
+              <ScrollArea className="h-[500px]">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-[180px]">{isRTL ? 'الوقت' : 'Time'}</TableHead>
+                      <TableHead>{isRTL ? 'المنفذ' : 'Actor'}</TableHead>
+                      <TableHead>{isRTL ? 'الإجراء' : 'Action'}</TableHead>
+                      <TableHead>{isRTL ? 'نوع الكيان' : 'Entity'}</TableHead>
+                      <TableHead className="text-right">{isRTL ? 'التفاصيل' : 'Details'}</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredLogs.map((log) => (
+                      <TableRow key={log.id} className="group">
+                        <TableCell className="text-sm text-muted-foreground">
+                          <div className="flex items-center gap-2">
+                            <Clock className="h-3.5 w-3.5" />
+                            <div>
+                              <p>{format(new Date(log.created_at), 'MMM d, yyyy', { locale: isRTL ? ar : undefined })}</p>
+                              <p className="text-xs">{format(new Date(log.created_at), 'HH:mm:ss')}</p>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>{getRoleBadge(log.actor_role)}</TableCell>
+                        <TableCell>{getActionBadge(log.action)}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className="gap-1">
+                            {getEntityIcon(log.entity_type)}
+                            {log.entity_type}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button 
+                            size="sm" 
+                            variant="ghost"
+                            onClick={() => openDetails(log)}
+                            className="opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            {isRTL ? 'عرض' : 'View'}
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </ScrollArea>
             )}
           </CardContent>
         </Card>
@@ -230,59 +396,67 @@ export default function AuditLogsPage() {
         <Dialog open={detailsDialogOpen} onOpenChange={setDetailsDialogOpen}>
           <DialogContent className="max-w-2xl">
             <DialogHeader>
-              <DialogTitle>{isRTL ? 'تفاصيل السجل' : 'Log Details'}</DialogTitle>
+              <DialogTitle className="flex items-center gap-2">
+                <FileText className="h-5 w-5 text-primary" />
+                {isRTL ? 'تفاصيل السجل' : 'Log Details'}
+              </DialogTitle>
               <DialogDescription>
-                {selectedLog?.created_at && new Date(selectedLog.created_at).toLocaleString()}
+                {selectedLog?.created_at && format(new Date(selectedLog.created_at), 'PPpp', { locale: isRTL ? ar : undefined })}
               </DialogDescription>
             </DialogHeader>
             {selectedLog && (
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground mb-1">
+                  <div className="p-3 bg-muted rounded-lg">
+                    <p className="text-xs font-medium text-muted-foreground mb-1">
                       {isRTL ? 'الإجراء' : 'Action'}
                     </p>
                     {getActionBadge(selectedLog.action)}
                   </div>
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground mb-1">
+                  <div className="p-3 bg-muted rounded-lg">
+                    <p className="text-xs font-medium text-muted-foreground mb-1">
                       {isRTL ? 'نوع الكيان' : 'Entity Type'}
                     </p>
-                    <Badge variant="outline">{selectedLog.entity_type}</Badge>
+                    <Badge variant="outline" className="gap-1">
+                      {getEntityIcon(selectedLog.entity_type)}
+                      {selectedLog.entity_type}
+                    </Badge>
                   </div>
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground mb-1">
+                  <div className="p-3 bg-muted rounded-lg">
+                    <p className="text-xs font-medium text-muted-foreground mb-1">
                       {isRTL ? 'معرف الكيان' : 'Entity ID'}
                     </p>
-                    <code className="text-xs bg-muted px-2 py-1 rounded">
+                    <code className="text-xs bg-background px-2 py-1 rounded">
                       {selectedLog.entity_id || 'N/A'}
                     </code>
                   </div>
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground mb-1">
+                  <div className="p-3 bg-muted rounded-lg">
+                    <p className="text-xs font-medium text-muted-foreground mb-1">
                       {isRTL ? 'دور المنفذ' : 'Actor Role'}
                     </p>
                     {getRoleBadge(selectedLog.actor_role)}
                   </div>
                 </div>
                 
-                {selectedLog.old_values && (
+                {selectedLog.old_values && Object.keys(selectedLog.old_values).length > 0 && (
                   <div>
-                    <p className="text-sm font-medium text-muted-foreground mb-2">
+                    <p className="text-sm font-medium text-muted-foreground mb-2 flex items-center gap-2">
+                      <XCircle className="h-4 w-4 text-red-500" />
                       {isRTL ? 'القيم السابقة' : 'Previous Values'}
                     </p>
-                    <pre className="text-xs bg-muted p-3 rounded overflow-auto max-h-32">
+                    <pre className="text-xs bg-red-50 dark:bg-red-950/30 text-red-800 dark:text-red-200 p-3 rounded-lg overflow-auto max-h-32">
                       {JSON.stringify(selectedLog.old_values, null, 2)}
                     </pre>
                   </div>
                 )}
                 
-                {selectedLog.new_values && (
+                {selectedLog.new_values && Object.keys(selectedLog.new_values).length > 0 && (
                   <div>
-                    <p className="text-sm font-medium text-muted-foreground mb-2">
+                    <p className="text-sm font-medium text-muted-foreground mb-2 flex items-center gap-2">
+                      <CheckCircle className="h-4 w-4 text-emerald-500" />
                       {isRTL ? 'القيم الجديدة' : 'New Values'}
                     </p>
-                    <pre className="text-xs bg-muted p-3 rounded overflow-auto max-h-32">
+                    <pre className="text-xs bg-emerald-50 dark:bg-emerald-950/30 text-emerald-800 dark:text-emerald-200 p-3 rounded-lg overflow-auto max-h-32">
                       {JSON.stringify(selectedLog.new_values, null, 2)}
                     </pre>
                   </div>
@@ -290,10 +464,11 @@ export default function AuditLogsPage() {
                 
                 {selectedLog.metadata && Object.keys(selectedLog.metadata).length > 0 && (
                   <div>
-                    <p className="text-sm font-medium text-muted-foreground mb-2">
+                    <p className="text-sm font-medium text-muted-foreground mb-2 flex items-center gap-2">
+                      <FileText className="h-4 w-4" />
                       {isRTL ? 'بيانات إضافية' : 'Metadata'}
                     </p>
-                    <pre className="text-xs bg-muted p-3 rounded overflow-auto max-h-32">
+                    <pre className="text-xs bg-muted p-3 rounded-lg overflow-auto max-h-32">
                       {JSON.stringify(selectedLog.metadata, null, 2)}
                     </pre>
                   </div>
