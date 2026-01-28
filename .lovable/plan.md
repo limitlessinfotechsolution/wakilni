@@ -1,589 +1,415 @@
 
-# Phase 3: Complete Internal Screens Redesign
-## Provider Dashboard, Ritual Interface & All Internal Pages
+# Phase 3 Continuation: Complete Internal Screens Redesign
+## Remaining Implementation Plan
 
 ---
 
-## Overview
+## Current Status Summary
 
-This phase transforms **every internal screen** into a premium, native-feeling mobile app experience. Each screen receives unique functionality, animations, and role-specific styling following the "Sacred Simplicity" design philosophy established in Phases 1-2.
+### Already Completed
+- SparklineChart, RingChart, Timeline components
+- FloatingActionButton, BottomSheet, SwipeableTabs components
+- ImageGallery, SuccessCelebration components
+- ProviderDashboard with earnings sparklines and FAB
+- BookingsPage with SwipeableTabs
+- BookingDetailPage migrated to DashboardLayout
+- BeneficiariesPage with statistics and FAB
+- KycQueuePage migrated to DashboardLayout
 
----
-
-## Screens to Redesign (25+ Pages)
-
-### A. Dashboards (4 Screens)
-1. Provider Dashboard
-2. Admin Dashboard
-3. Vendor Dashboard
-4. Traveler Dashboard (enhancement)
-
-### B. Booking System (4 Screens)
-1. Bookings List Page
-2. Booking Detail Page
-3. New Booking Page (wizard refinement)
-4. Booking Allocation Page (admin)
-
-### C. Provider Section (6 Screens)
-1. Provider Services Management
-2. Provider Availability Calendar
-3. Provider KYC Verification
-4. Provider Gallery
-5. Provider Reviews
-6. Ritual Event Recorder (major)
-
-### D. Traveler Section (3 Screens)
-1. Beneficiaries Management
-2. Services Browse Page
-3. Donate/Charity Page
-
-### E. Admin Section (8 Screens)
-1. KYC Queue
-2. Providers Management
-3. Vendors Management
-4. Users Management
-5. Donations Management
-6. Subscriptions Management
-7. Scholar Verification Queue
-8. Certificate Verification (public)
-
-### F. Super Admin Section (4 Screens)
-1. Analytics Dashboard
-2. Audit Logs
-3. System Settings
-4. Admin Management
-
-### G. Settings & Profile (2 Screens)
-1. Profile Settings
-2. Vendor KYC
+### Remaining Screens to Redesign (17 Pages)
 
 ---
 
-## Technical Implementation
+## Batch 1: Layout Migrations (MainLayout to DashboardLayout)
 
-### 1. Ritual Event Recorder (Major Redesign)
+The following pages currently use `MainLayout` and need migration for consistent navigation:
 
-The ritual recording interface becomes a full-screen, immersive experience:
+| Page | Current Layout | Required Changes |
+|------|----------------|------------------|
+| ProvidersManagementPage | MainLayout | Migrate + GlassCard styling |
+| VendorsManagementPage | MainLayout | Migrate + Premium table styling |
+| DonationsPage | MainLayout | Migrate + Impact visualizations |
+| ServicesPage (browse) | MainLayout | Migrate for logged-in users |
+| DonatePage | MainLayout | Migrate + Enhanced animations |
 
-```text
-Current State:
-  - Standard card-based UI
-  - Basic step list
-  - Simple progress bar
+---
 
-New Design:
-  - Full-screen recording mode
-  - Large camera/GPS capture area
-  - Floating step indicator
-  - Live GPS signal strength display
-  - Audio waveform for dua recording
-  - Haptic feedback on step completion
-  - Celebration animation on ritual complete
-```
+## Batch 2: Admin/Super Admin Pages Enhancement
 
-**New Features:**
-- Swipe between ritual steps
-- Photo/video capture with EXIF preservation
-- Audio recorder with visual waveform
-- Real-time GPS accuracy indicator
-- Step-by-step guided checklist overlay
-- Beneficiary name mention detection
-- Offline mode with sync indicator
+### 1. ProvidersManagementPage.tsx
+**Current State**: Uses MainLayout, basic table view
+**Enhancements**:
+- Migrate to DashboardLayout
+- Add StatCard row for quick stats (Total, Verified, Pending, Suspended)
+- Implement GlassCard styling for main content
+- Add bulk selection mode with toolbar
+- Quick actions in row hover state
+- Document preview modal for KYC documents
 
-### 2. Provider Dashboard (Enhancement)
+### 2. VendorsManagementPage.tsx
+**Current State**: Uses MainLayout, similar to providers page
+**Enhancements**:
+- Migrate to DashboardLayout
+- Add subscription status badges
+- Revenue breakdown per vendor
+- Quick edit bottom sheet
+- Suspend/Unsuspend with confirmation dialog
 
-```text
-New Widget Layout:
-  - Hero earnings card with sparkline graph
-  - Today's schedule timeline (vertical)
-  - Pending actions with urgency badges
-  - Performance ring charts (completion %, response time)
-  - Quick action floating button
-```
+### 3. DonationsPage.tsx
+**Current State**: Uses MainLayout, good feature set
+**Enhancements**:
+- Migrate to DashboardLayout
+- Animated donation counter (useAnimatedCounter hook)
+- Impact visualization with RingChart
+- Live donation ticker animation
+- Zakat calculator widget integration
+- Donor wall with optional display
 
-**New Features:**
-- Earnings breakdown by service type
-- Calendar mini-view with booking dots
-- Real-time notification badges
-- Swipe to access quick actions
+### 4. AnalyticsPage.tsx (Super Admin)
+**Current State**: Already uses DashboardLayout, mock data
+**Enhancements**:
+- Dark theme toggle for command center feel
+- Interactive chart drill-down (click to filter)
+- Export to PDF/CSV buttons
+- Date range picker with presets
+- Real-time indicator animations
+- SparklineChart for trend indicators
 
-### 3. Admin Dashboard (Command Center)
+### 5. AuditLogsPage.tsx (Super Admin)
+**Current State**: Already uses DashboardLayout, table view
+**Enhancements**:
+- Timeline view toggle (table vs vertical timeline)
+- JSON diff viewer modal for old/new values
+- Color-coded action badges (create=green, delete=red, update=blue)
+- Quick filter chips above table
+- Export functionality
+- Real-time log stream with WebSocket
 
-```text
-New Design:
-  - Dark theme option
-  - Data-dense widget grid
-  - Real-time counters with animations
-  - Quick filters in persistent sidebar
-  - Bulk action toolbar
-  - System health indicators
-```
+### 6. SystemSettingsPage.tsx (Super Admin)
+**Current State**: Already uses DashboardLayout, functional
+**Enhancements**:
+- GlassCard styling for setting groups
+- Animated toggle switches
+- Confirmation dialogs with illustrations
+- System health indicators
+- Configuration backup/restore
 
-**New Features:**
-- Live activity feed
-- Quick search (Cmd+K style)
-- Filter presets for common queries
-- One-click exports
+---
 
-### 4. Bookings List Page
+## Batch 3: Traveler/Public Pages Enhancement
 
-```text
-Current State:
-  - Basic card list
-  - Simple status filter
+### 7. ServicesPage.tsx (Browse)
+**Current State**: Uses MainLayout, good filter system
+**Enhancements**:
+- Migrate to DashboardLayout for logged-in users
+- Horizontal category tabs with SwipeableTabs
+- Service cards with parallax hover effect
+- Floating filter FAB on mobile
+- Wishlist heart button with animation
+- Recently viewed section
+- Compare mode with side-by-side view
 
-New Design:
-  - Tab bar (All/Pending/Active/Completed)
-  - Pull-to-refresh with custom loader
-  - Swipeable booking cards (reveal actions)
-  - Status timeline visualization on cards
-  - Floating "New Booking" button
-```
-
-**New Features:**
-- Swipe left: Cancel/Dispute
-- Swipe right: Message provider
-- Long press: Quick status view
-- Search with voice input
-
-### 5. Booking Detail Page
-
-```text
-Current State:
-  - MainLayout wrapper
-  - Basic tabs (Timeline/Proofs/Messages)
-
-New Design:
-  - DashboardLayout (consistent nav)
-  - Premium glass cards
-  - Full-screen proof gallery view
-  - Inline chat interface
-  - Status action sheet (bottom)
-  - Print certificate button
-```
-
-**New Features:**
-- Pinch-to-zoom on proofs
-- Voice message recording
-- Real-time message sync
-- Certificate download/share
-
-### 6. Beneficiaries Page
-
-```text
-New Design:
-  - Card carousel for mobile (swipe)
-  - Grid for desktop
-  - Add button with animated icon
-  - Status badges (living/deceased)
-  - Avatar with relationship icon
-  - Quick edit sheet (bottom)
-```
-
-**New Features:**
-- Swipe to delete (with undo toast)
-- Photo upload for beneficiary
-- Relationship selector with icons
-- Duplicate detection warning
-
-### 7. Services Browse Page
-
-```text
-Current State:
-  - MainLayout wrapper
-  - Standard filter sidebar
-
-New Design:
-  - DashboardLayout for authenticated users
-  - Horizontal category tabs (swipeable)
-  - Service cards with parallax images
-  - Floating filter button (opens sheet)
-  - Provider mini-profile in card
-  - Price comparison mode
-```
-
-**New Features:**
-- Wishlist/favorites
-- Recently viewed
-- Compare up to 3 services
-- Filter by availability dates
-
-### 8. KYC Queue (Admin)
-
-```text
-Current State:
-  - MainLayout wrapper
-  - Tab-based status view
-
-New Design:
-  - DashboardLayout
-  - Kanban-style columns (drag to approve)
-  - Document preview modal
-  - Quick approve/reject actions
-  - Batch selection mode
-  - Rejection templates
-```
-
-**New Features:**
-- Drag card to status column
-- Bulk approve selected
-- Document zoom viewer
-- Copy rejection reason templates
-
-### 9. Donations Page
-
-```text
-Current State:
-  - Good structure, MainLayout
-
-New Design:
-  - DashboardLayout for authenticated users
-  - Impact visualization (lives helped)
-  - Live donation counter animation
-  - Goal progress with celebration at milestones
-  - Donor wall (optional display)
-  - Zakat calculator widget
-```
-
-**New Features:**
-- Recurring donation option
-- Dedicate to beneficiary
+### 8. DonatePage.tsx
+**Current State**: Uses MainLayout, beautiful design
+**Enhancements**:
+- Migrate to DashboardLayout for logged-in users
+- Animated counter for total raised
+- Milestone celebrations (confetti at 25%, 50%, 75%, 100%)
+- Recurring donation toggle
+- Zakat calculator tab
 - Share donation receipt
-- Tax receipt generation
-
-### 10. Profile Settings
-
-```text
-Current State:
-  - Functional tabs
-  - Basic form layout
-
-New Design:
-  - Glass card sections
-  - Avatar with camera overlay
-  - Animated toggle switches
-  - Push notification test button
-  - Offline sync status widget
-  - Account security section
-```
-
-**New Features:**
-- Password change flow
-- Two-factor setup
-- Session management
-- Data export (GDPR)
-
-### 11. Analytics (Super Admin)
-
-```text
-Current State:
-  - Mock data charts
-  - Basic layout
-
-New Design:
-  - Dark theme default
-  - Full-width chart cards
-  - Interactive drill-down charts
-  - Real-time data indicators
-  - Export to PDF/CSV
-  - Date range picker
-```
-
-**New Features:**
-- Chart type toggle (line/bar/area)
-- Custom date ranges
-- Compare periods
-- Automated insights/alerts
-
-### 12. Audit Logs (Super Admin)
-
-```text
-Current State:
-  - Table-based view
-  - Filter by entity type
-
-New Design:
-  - Timeline view option
-  - Color-coded action types
-  - Actor profile cards
-  - JSON diff viewer for changes
-  - Real-time log stream
-  - Advanced search (by date, actor, entity)
-```
-
-**New Features:**
-- Export logs
-- Create alerts for specific actions
-- Pin important logs
-- Bulk archive
 
 ---
 
-## Shared Component Upgrades
+## Batch 4: Vendor Pages Enhancement
 
-### All Screens Will Use:
+### 9. VendorDashboard.tsx
+**Current State**: Good widgets, uses DashboardLayout
+**Enhancements**:
+- Revenue SparklineChart in hero card
+- Team management grid with provider cards
+- Quick action FAB (Add Provider, New Service)
+- Subscription status ring chart
+- Pull-to-refresh on mobile
 
-1. **DashboardLayout** - Consistent navigation
-2. **GlassCard** - Premium card styling
-3. **StatCard** - Gradient stats display
-4. **EmptyState** - Illustrated empty placeholders
-5. **LoadingState** - Skeleton + shimmer
-6. **ErrorState** - Retry with illustration
-7. **PullToRefresh** - Mobile refresh gesture
+### 10. VendorBookingsPage.tsx
+**Current State**: Needs review for premium styling
+**Enhancements**:
+- SwipeableTabs for status filtering
+- Provider assignment quick action
+- Revenue breakdown per booking
+- Bulk status update toolbar
 
-### New Shared Components to Create:
-
-```text
-src/components/
-  data-display/
-    - DataTable.tsx          # Sortable, filterable table
-    - Timeline.tsx           # Vertical activity timeline
-    - KanbanBoard.tsx        # Drag-and-drop columns
-    - RingChart.tsx          # Circular progress
-    - SparklineChart.tsx     # Inline trend graph
-  
-  navigation/
-    - TabsNav.tsx            # Swipeable tabs
-    - FloatingActionButton.tsx
-    - BottomSheet.tsx        # iOS-style action sheet
-    - Breadcrumbs.tsx        # Navigation breadcrumbs
-  
-  media/
-    - PhotoCapture.tsx       # Camera interface
-    - AudioRecorder.tsx      # Voice recording with waveform
-    - ImageGallery.tsx       # Full-screen gallery
-    - DocumentViewer.tsx     # PDF/image preview
-  
-  feedback/
-    - Toast.tsx              # Enhanced toast with actions
-    - ConfirmDialog.tsx      # Confirmation with illustration
-    - SuccessCelebration.tsx # Confetti + sound
-```
+### 11. VendorKycPage.tsx
+**Current State**: Uses DashboardLayout, form-based
+**Enhancements**:
+- Step indicator with progress
+- GlassCard form sections
+- Document upload with preview
+- Verification status timeline
 
 ---
 
-## Layout Fixes
+## Batch 5: Provider Pages Enhancement
 
-**Current Issue:** Many pages use `MainLayout` instead of `DashboardLayout`
+### 12. Provider ServicesPage.tsx
+**Current State**: Needs premium styling
+**Enhancements**:
+- Service cards with price and stats
+- Quick edit bottom sheet
+- Duplicate service action
+- Status toggle (active/inactive)
+- Drag to reorder
 
-**Fix Required:**
+### 13. Provider AvailabilityPage.tsx
+**Current State**: Uses DashboardLayout, functional
+**Enhancements**:
+- Calendar with drag-to-block
+- Time slot visual editor
+- Bulk date selection
+- Exception dates highlighting
+
+### 14. Provider CalendarPage.tsx
+**Current State**: Basic calendar view
+**Enhancements**:
+- Full-screen calendar mode
+- Booking cards in day view
+- Status color coding
+- Quick action on booking tap
+
+### 15. Provider ReviewsPage.tsx
+**Current State**: Uses DashboardLayout
+**Enhancements**:
+- Rating distribution ring chart
+- Filter by star rating
+- Response to review inline
+- Highlight feature-worthy reviews
+
+---
+
+## Batch 6: Ritual Event Recorder (Major Redesign)
+
+### 16. RitualEventRecorder.tsx
+**Current State**: Collapsible card-based UI
+
+**Complete Redesign Vision**:
 ```text
-Pages using MainLayout (need migration):
-  - KycQueuePage.tsx
-  - BookingDetailPage.tsx
-  - ServicesPage.tsx (public)
-  - ProviderServicesPage.tsx
-  - ProviderProfilePage.tsx
-  - CertificateVerificationPage.tsx
+Full-Screen Immersive Experience:
++----------------------------------+
+|  GPS Signal: ████████ Strong     |
+|  Location: Masjid al-Haram       |
++----------------------------------+
+|                                  |
+|     [LARGE PHOTO/VIDEO AREA]     |
+|                                  |
+|   📷 Capture   🎥 Video   🎤 Audio|
++----------------------------------+
+|  Step 3 of 9: Maqam Ibrahim      |
+|  ▰▰▰▱▱▱▱▱▱  33%                 |
++----------------------------------+
+|  Dua Transcript:                 |
+|  اللهم اغفر لـ [محمد]...         |
+|  ✅ Beneficiary Name Detected    |
++----------------------------------+
+|  [       RECORD STEP       ]     |
++----------------------------------+
 ```
 
-**Migration Pattern:**
+**New Components to Create**:
+- `FullScreenRecorder.tsx` - Main immersive interface
+- `GPSIndicator.tsx` - Signal strength display
+- `AudioRecorder.tsx` - Voice recording with waveform
+- `PhotoCapture.tsx` - Camera interface with EXIF
+- `StepProgressBar.tsx` - Visual step indicator
+
+**Features**:
+- Full-screen mode toggle
+- Real-time GPS accuracy display
+- Photo capture with timestamp overlay
+- Audio recorder with waveform visualization
+- Swipe between ritual steps
+- Haptic feedback on step completion
+- Offline mode with sync queue
+- Celebration animation on ritual complete
+
+---
+
+## Batch 7: Profile Settings Enhancement
+
+### 17. ProfileSettingsPage.tsx
+**Current State**: Uses DashboardLayout, comprehensive tabs
+**Enhancements**:
+- GlassCard styling for each section
+- Avatar with camera overlay animation
+- Animated toggle switches
+- Push notification test button with haptic
+- Offline sync status widget with last sync time
+- Account security section with session list
+- Data export button (GDPR compliance)
+
+---
+
+## New Shared Components to Create
+
+### Data Display Components
 ```typescript
-// Before
-import { MainLayout } from '@/components/layout';
-<MainLayout>...</MainLayout>
+// Already created: SparklineChart, RingChart, Timeline
 
-// After
-import { DashboardLayout } from '@/components/layout/DashboardLayout';
-<DashboardLayout>...</DashboardLayout>
+// To create:
+DataTable.tsx - Sortable, filterable, selectable table
+KanbanBoard.tsx - Drag-and-drop columns (for KYC queue)
 ```
 
----
+### Media Components
+```typescript
+// Already created: ImageGallery
 
-## Role-Specific Features
+// To create:
+PhotoCapture.tsx - Camera interface with preview
+AudioRecorder.tsx - Voice recording with waveform
+DocumentViewer.tsx - PDF/image preview modal
+```
 
-### Traveler Screens:
-- Prayer times widget
-- Qibla compass
-- Booking status tracker
-- Beneficiary quick-add
+### Feedback Components
+```typescript
+// Already created: SuccessCelebration, EmptyState, LoadingState, ErrorState
 
-### Provider Screens:
-- Earnings dashboard with trends
-- Schedule calendar with drag
-- Ritual recording full-screen mode
-- Performance analytics
-
-### Vendor Screens:
-- Team management grid
-- Subscription billing info
-- Provider roster with status
-- Revenue by provider breakdown
-
-### Admin Screens:
-- Bulk actions on all tables
-- Quick filters sidebar
-- Activity feed
-- System alerts panel
-
-### Super Admin Screens:
-- Dark mode toggle
-- Platform health dashboard
-- Configuration management
-- Database statistics
+// To create:
+ConfirmDialog.tsx - Confirmation with illustration
+```
 
 ---
 
 ## Animation Enhancements
 
-### Page Transitions:
+### New Keyframes to Add
 ```css
-/* Enter from right */
-.page-enter {
-  animation: slide-in-right 300ms var(--spring-bounce);
+@keyframes counter-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-/* Exit to left */
-.page-exit {
-  animation: slide-out-left 250ms ease-out;
-}
-```
-
-### Card Interactions:
-```css
-/* Tap feedback */
-.card-tap {
-  transition: transform 150ms var(--spring-bounce);
-}
-.card-tap:active {
-  transform: scale(0.98);
-}
-
-/* Swipe reveal */
-.swipe-action {
-  transition: transform 200ms ease-out;
-}
-```
-
-### Status Changes:
-```css
-/* Status badge pulse */
-@keyframes status-update {
-  0%, 100% { transform: scale(1); }
+@keyframes milestone-celebration {
+  0% { transform: scale(1); }
   50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
 }
-```
 
----
-
-## Files to Create
-
-```text
-src/
-  components/
-    data-display/
-      DataTable.tsx
-      Timeline.tsx
-      RingChart.tsx
-      SparklineChart.tsx
-    navigation/
-      FloatingActionButton.tsx
-      BottomSheet.tsx
-      SwipeableTabs.tsx
-    media/
-      PhotoCapture.tsx
-      AudioRecorder.tsx
-      ImageGallery.tsx
-    rituals/
-      FullScreenRecorder.tsx      # Immersive ritual recording
-      RitualStepCard.tsx          # Individual step display
-      GPSIndicator.tsx            # Signal strength display
-      DuaRecorder.tsx             # Audio recording component
-  
-  hooks/
-    useSwipeActions.ts            # Swipe gesture handler
-    useAudioRecorder.ts           # Voice recording logic
-    usePhotoCapture.ts            # Camera interface
-```
-
-## Files to Modify
-
-```text
-All dashboard pages:
-  - src/pages/dashboard/ProviderDashboard.tsx
-  - src/pages/dashboard/AdminDashboard.tsx
-  - src/pages/dashboard/VendorDashboard.tsx
-
-All booking pages:
-  - src/pages/bookings/BookingsPage.tsx
-  - src/pages/bookings/BookingDetailPage.tsx
-
-All provider pages:
-  - src/pages/provider/ServicesPage.tsx
-  - src/pages/provider/AvailabilityPage.tsx
-  - src/pages/provider/KycPage.tsx
-  - src/pages/provider/ReviewsPage.tsx
-
-All admin pages:
-  - src/pages/admin/KycQueuePage.tsx
-  - src/pages/admin/ProvidersManagementPage.tsx
-  - src/pages/admin/UsersManagementPage.tsx
-  - src/pages/admin/DonationsPage.tsx
-  - src/pages/admin/SubscriptionsPage.tsx
-  - src/pages/admin/ScholarVerificationPage.tsx
-
-All super-admin pages:
-  - src/pages/super-admin/AnalyticsPage.tsx
-  - src/pages/super-admin/AuditLogsPage.tsx
-  - src/pages/super-admin/SystemSettingsPage.tsx
-
-Traveler pages:
-  - src/pages/beneficiaries/BeneficiariesPage.tsx
-  - src/pages/services/ServicesPage.tsx
-  - src/pages/donate/DonatePage.tsx
-
-Settings:
-  - src/pages/settings/ProfileSettingsPage.tsx
-
-Ritual components:
-  - src/components/rituals/RitualEventRecorder.tsx (major refactor)
+@keyframes gps-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
 ```
 
 ---
 
 ## Implementation Order
 
-### Week 1: Core Components + Layout Fixes
-1. Create new shared components (DataTable, Timeline, FloatingActionButton)
-2. Fix all MainLayout -> DashboardLayout migrations
-3. Apply GlassCard styling to all pages
-4. Add PullToRefresh to all list pages
+### Phase 3.1 (Immediate)
+1. Migrate ProvidersManagementPage to DashboardLayout + styling
+2. Migrate VendorsManagementPage to DashboardLayout + styling
+3. Migrate DonationsPage to DashboardLayout + impact viz
+4. Migrate ServicesPage to DashboardLayout for auth users
+5. Migrate DonatePage to DashboardLayout for auth users
 
-### Week 2: Dashboard Redesigns
-1. Provider Dashboard with earnings sparkline
-2. Admin Dashboard command center
-3. Vendor Dashboard with team overview
-4. Traveler Dashboard enhancements
+### Phase 3.2 (Admin Enhancement)
+1. Enhance AnalyticsPage with dark theme and interactivity
+2. Enhance AuditLogsPage with timeline view
+3. Enhance SystemSettingsPage with GlassCard styling
 
-### Week 3: Ritual Interface + Provider Pages
-1. Full-screen Ritual Event Recorder
-2. Provider Services with better cards
-3. Availability Calendar with drag
-4. Reviews page with filters
+### Phase 3.3 (Vendor/Provider)
+1. Enhance VendorDashboard with SparklineChart
+2. Update VendorBookingsPage with SwipeableTabs
+3. Enhance Provider ServicesPage with quick actions
+4. Update CalendarPage with better booking display
 
-### Week 4: Booking System + Admin Pages
-1. Bookings list with swipe actions
-2. Booking detail with inline chat
-3. KYC Queue with kanban
-4. All remaining admin pages
+### Phase 3.4 (Ritual Interface)
+1. Create GPSIndicator component
+2. Create PhotoCapture component
+3. Create AudioRecorder component
+4. Redesign RitualEventRecorder as immersive full-screen
 
-### Week 5: Polish + Super Admin
-1. Analytics with real charts
-2. Audit logs with timeline view
-3. Settings refinements
-4. Final visual QA across all screens
+### Phase 3.5 (Final Polish)
+1. Enhance ProfileSettingsPage with GlassCard
+2. Add missing ConfirmDialog component
+3. Apply pull-to-refresh to all remaining list pages
+4. Final animation and haptic polish
+
+---
+
+## Files to Create
+
+```text
+src/components/
+  media/
+    PhotoCapture.tsx
+    AudioRecorder.tsx
+    DocumentViewer.tsx
+  
+  rituals/
+    GPSIndicator.tsx
+    StepProgressBar.tsx
+  
+  feedback/
+    ConfirmDialog.tsx
+```
+
+## Files to Modify
+
+```text
+Admin Pages (5 files):
+  - src/pages/admin/ProvidersManagementPage.tsx
+  - src/pages/admin/VendorsManagementPage.tsx
+  - src/pages/admin/DonationsPage.tsx
+  - src/pages/super-admin/AnalyticsPage.tsx
+  - src/pages/super-admin/AuditLogsPage.tsx
+
+Traveler Pages (2 files):
+  - src/pages/services/ServicesPage.tsx
+  - src/pages/donate/DonatePage.tsx
+
+Vendor Pages (2 files):
+  - src/pages/dashboard/VendorDashboard.tsx
+  - src/pages/vendor/VendorBookingsPage.tsx
+
+Provider Pages (3 files):
+  - src/pages/provider/ServicesPage.tsx
+  - src/pages/provider/CalendarPage.tsx
+  - src/pages/provider/ReviewsPage.tsx
+
+Ritual Recording (1 file):
+  - src/components/rituals/RitualEventRecorder.tsx
+
+Settings (1 file):
+  - src/pages/settings/ProfileSettingsPage.tsx
+
+Styles (1 file):
+  - src/styles/animations.css (add new keyframes)
+```
+
+---
+
+## Technical Considerations
+
+1. **Consistent Imports**: Use shared components from index files
+2. **RTL Support**: All new components must support RTL
+3. **Mobile-First**: Design for mobile, enhance for desktop
+4. **Haptic Feedback**: Use useHaptics hook for interactions
+5. **Skeleton Loading**: Add loading states for all async data
+6. **Error Handling**: Use ErrorState component consistently
+7. **Empty States**: Use EmptyState with relevant illustrations
 
 ---
 
 ## Success Criteria
 
-- Every screen uses DashboardLayout
-- Every list has pull-to-refresh
-- Every card has tap feedback
-- Every action has haptic response
-- Every loading state shows skeleton
-- Every empty state has illustration
-- Every error state allows retry
+- All pages use DashboardLayout
+- All lists have pull-to-refresh
+- All cards have tap feedback (active:scale-[0.98])
+- All actions have haptic response
+- All loading states show skeleton
+- All empty states have illustration
+- All error states allow retry
 - Role themes applied consistently
-- RTL support on all screens
+- RTL support across all screens
 - Mobile navigation works everywhere
