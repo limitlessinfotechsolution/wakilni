@@ -15,6 +15,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const getThemeClass = () => {
     switch (role) {
       case 'super_admin':
+        return 'theme-super-admin';
       case 'admin':
         return 'theme-admin';
       case 'provider':

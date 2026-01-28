@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { MainLayout } from '@/components/layout';
+import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { useBookings, type BookingStatus } from '@/hooks/useBookings';
 import { useLanguage } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
@@ -60,8 +60,8 @@ export default function BookingsPage() {
   };
 
   return (
-    <MainLayout>
-      <div className="container py-8 px-4">
+    <DashboardLayout>
+      <div className="p-4 md:p-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
           <div>
@@ -205,6 +205,6 @@ export default function BookingsPage() {
           </div>
         )}
       </div>
-    </MainLayout>
+    </DashboardLayout>
   );
 }
