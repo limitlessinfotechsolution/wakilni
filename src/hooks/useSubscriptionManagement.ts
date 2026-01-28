@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { logAuditAction } from '@/hooks/useAuditLogger';
 import { addMonths } from 'date-fns';
 
 interface VendorSubscription {
@@ -89,15 +90,38 @@ export function useSubscriptionManagement() {
 
   const updateSubscription = async (vendorId: string, plan: string, months: number = 1) => {
     try {
+      const vendor = vendors.find(v => v.id === vendorId);
+      const oldPlan = vendor?.subscription_plan;
+      const newExpiry = addMonths(new Date(), months).toISOString();
+
       const { error } = await supabase
         .from('vendors')
         .update({
           subscription_plan: plan,
-          subscription_expires_at: addMonths(new Date(), months).toISOString(),
+          subscription_expires_at: newExpiry,
         })
         .eq('id', vendorId);
 
       if (error) throw error;
+
+      // Log audit action
+      await logAuditAction({
+        action: 'subscription_updated',
+        entityType: 'subscription',
+        entityId: vendorId,
+        oldValues: { 
+          plan: oldPlan, 
+          expires_at: vendor?.subscription_expires_at,
+          vendor_name: vendor?.company_name 
+        },
+        newValues: { plan, expires_at: newExpiry },
+        metadata: { 
+          changed_from: oldPlan, 
+          changed_to: plan,
+          months_duration: months,
+          vendor_name: vendor?.company_name
+        }
+      });
 
       toast({
         title: 'Success',
@@ -126,15 +150,33 @@ export function useSubscriptionManagement() {
         ? new Date(vendor.subscription_expires_at) 
         : new Date();
       const baseDate = currentExpiry > new Date() ? currentExpiry : new Date();
+      const newExpiry = addMonths(baseDate, months).toISOString();
 
       const { error } = await supabase
         .from('vendors')
         .update({
-          subscription_expires_at: addMonths(baseDate, months).toISOString(),
+          subscription_expires_at: newExpiry,
         })
         .eq('id', vendorId);
 
       if (error) throw error;
+
+      // Log audit action
+      await logAuditAction({
+        action: 'subscription_extended',
+        entityType: 'subscription',
+        entityId: vendorId,
+        oldValues: { 
+          expires_at: vendor.subscription_expires_at,
+          vendor_name: vendor.company_name
+        },
+        newValues: { expires_at: newExpiry },
+        metadata: { 
+          months_extended: months,
+          vendor_name: vendor.company_name,
+          new_expiry: newExpiry
+        }
+      });
 
       toast({
         title: 'Success',
@@ -156,6 +198,8 @@ export function useSubscriptionManagement() {
 
   const cancelSubscription = async (vendorId: string) => {
     try {
+      const vendor = vendors.find(v => v.id === vendorId);
+
       const { error } = await supabase
         .from('vendors')
         .update({
@@ -165,6 +209,23 @@ export function useSubscriptionManagement() {
         .eq('id', vendorId);
 
       if (error) throw error;
+
+      // Log audit action
+      await logAuditAction({
+        action: 'subscription_updated',
+        entityType: 'subscription',
+        entityId: vendorId,
+        oldValues: { 
+          plan: vendor?.subscription_plan, 
+          expires_at: vendor?.subscription_expires_at,
+          vendor_name: vendor?.company_name
+        },
+        newValues: { plan: 'basic', expires_at: null },
+        metadata: { 
+          action_type: 'cancellation',
+          vendor_name: vendor?.company_name
+        }
+      });
 
       toast({
         title: 'Success',

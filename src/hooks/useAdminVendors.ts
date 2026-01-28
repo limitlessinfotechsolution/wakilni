@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { logAuditAction } from '@/hooks/useAuditLogger';
 
 type KycStatus = 'pending' | 'under_review' | 'approved' | 'rejected';
 
@@ -79,6 +80,9 @@ export function useAdminVendors(kycFilter?: KycStatus) {
 
   const updateKycStatus = async (vendorId: string, status: KycStatus, notes?: string) => {
     try {
+      const vendor = vendors.find(v => v.id === vendorId);
+      const oldStatus = vendor?.kyc_status;
+
       const { error } = await supabase
         .from('vendors')
         .update({
@@ -90,6 +94,19 @@ export function useAdminVendors(kycFilter?: KycStatus) {
         .eq('id', vendorId);
 
       if (error) throw error;
+
+      // Log audit action
+      await logAuditAction({
+        action: status === 'approved' ? 'vendor_kyc_approved' : 'vendor_kyc_rejected',
+        entityType: 'vendor',
+        entityId: vendorId,
+        oldValues: { kyc_status: oldStatus, vendor_name: vendor?.company_name },
+        newValues: { kyc_status: status, notes },
+        metadata: { 
+          vendor_name: vendor?.company_name,
+          decision: status
+        }
+      });
 
       toast({
         title: 'Success',
@@ -111,6 +128,8 @@ export function useAdminVendors(kycFilter?: KycStatus) {
 
   const suspendVendor = async (vendorId: string, reason: string) => {
     try {
+      const vendor = vendors.find(v => v.id === vendorId);
+
       const { error } = await supabase
         .from('vendors')
         .update({
@@ -121,6 +140,19 @@ export function useAdminVendors(kycFilter?: KycStatus) {
         .eq('id', vendorId);
 
       if (error) throw error;
+
+      // Log audit action
+      await logAuditAction({
+        action: 'vendor_suspended',
+        entityType: 'vendor',
+        entityId: vendorId,
+        oldValues: { is_suspended: false, vendor_name: vendor?.company_name },
+        newValues: { is_suspended: true, suspension_reason: reason },
+        metadata: { 
+          vendor_name: vendor?.company_name,
+          reason
+        }
+      });
 
       toast({
         title: 'Success',
@@ -142,6 +174,8 @@ export function useAdminVendors(kycFilter?: KycStatus) {
 
   const unsuspendVendor = async (vendorId: string) => {
     try {
+      const vendor = vendors.find(v => v.id === vendorId);
+
       const { error } = await supabase
         .from('vendors')
         .update({
@@ -152,6 +186,16 @@ export function useAdminVendors(kycFilter?: KycStatus) {
         .eq('id', vendorId);
 
       if (error) throw error;
+
+      // Log audit action
+      await logAuditAction({
+        action: 'vendor_activated',
+        entityType: 'vendor',
+        entityId: vendorId,
+        oldValues: { is_suspended: true, vendor_name: vendor?.company_name },
+        newValues: { is_suspended: false, is_active: true },
+        metadata: { vendor_name: vendor?.company_name }
+      });
 
       toast({
         title: 'Success',

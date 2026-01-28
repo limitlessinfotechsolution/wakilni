@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { logAuditAction } from '@/hooks/useAuditLogger';
 import type { Database } from '@/integrations/supabase/types';
 
 type AppRole = Database['public']['Enums']['app_role'];
@@ -67,14 +68,28 @@ export function useAdminUsers(roleFilter: RoleFilter = 'all') {
     }
   };
 
-  const updateUserRole = async (userId: string, newRole: AppRole) => {
+  const updateUserRole = async (userId: string, newRole: AppRole, userName?: string) => {
     try {
+      // Get current role for audit
+      const currentUser = users.find(u => u.user_id === userId);
+      const oldRole = currentUser?.role;
+
       const { error } = await supabase
         .from('user_roles')
         .update({ role: newRole })
         .eq('user_id', userId);
 
       if (error) throw error;
+
+      // Log audit action
+      await logAuditAction({
+        action: 'role_changed',
+        entityType: 'user',
+        entityId: userId,
+        oldValues: { role: oldRole, user_name: userName || currentUser?.profile?.full_name },
+        newValues: { role: newRole },
+        metadata: { changed_from: oldRole, changed_to: newRole }
+      });
 
       toast({
         title: 'Success',
@@ -94,8 +109,10 @@ export function useAdminUsers(roleFilter: RoleFilter = 'all') {
     }
   };
 
-  const deleteUser = async (userId: string) => {
+  const deleteUser = async (userId: string, userName?: string) => {
     try {
+      const currentUser = users.find(u => u.user_id === userId);
+
       // Note: This only removes the role, actual user deletion requires admin API
       const { error } = await supabase
         .from('user_roles')
@@ -103,6 +120,18 @@ export function useAdminUsers(roleFilter: RoleFilter = 'all') {
         .eq('user_id', userId);
 
       if (error) throw error;
+
+      // Log audit action
+      await logAuditAction({
+        action: 'user_deleted',
+        entityType: 'user',
+        entityId: userId,
+        oldValues: { 
+          role: currentUser?.role, 
+          user_name: userName || currentUser?.profile?.full_name 
+        },
+        metadata: { deleted_role: currentUser?.role }
+      });
 
       toast({
         title: 'Success',

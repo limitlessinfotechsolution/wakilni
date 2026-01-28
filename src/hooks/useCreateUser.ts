@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { logAuditAction } from '@/hooks/useAuditLogger';
 import type { Database } from '@/integrations/supabase/types';
 
 type AppRole = Database['public']['Enums']['app_role'];
@@ -21,7 +22,7 @@ export function useCreateUser() {
   const createUser = async (userData: CreateUserData): Promise<boolean> => {
     setIsLoading(true);
     try {
-      // Sign up the user
+      // Create user with Supabase auth
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: userData.email,
         password: userData.password,
@@ -39,6 +40,38 @@ export function useCreateUser() {
       if (!authData.user) {
         throw new Error('User creation failed');
       }
+
+      // Update profile with additional data if provided
+      if (userData.phone || userData.fullNameAr) {
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .update({
+            phone: userData.phone || null,
+            full_name_ar: userData.fullNameAr || null,
+          })
+          .eq('user_id', authData.user.id);
+
+        if (profileError) {
+          console.error('Error updating profile:', profileError);
+        }
+      }
+
+      // Log audit action
+      await logAuditAction({
+        action: userData.role === 'admin' || userData.role === 'super_admin' ? 'admin_created' : 'user_created',
+        entityType: 'user',
+        entityId: authData.user.id,
+        newValues: { 
+          email: userData.email, 
+          full_name: userData.fullName,
+          role: userData.role 
+        },
+        metadata: { 
+          created_role: userData.role,
+          has_phone: !!userData.phone,
+          has_arabic_name: !!userData.fullNameAr
+        }
+      });
 
       toast({
         title: 'Success',
