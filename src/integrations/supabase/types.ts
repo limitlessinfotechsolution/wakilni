@@ -311,6 +311,13 @@ export type Database = {
             referencedRelation: "donations"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "donation_allocations_donation_id_fkey"
+            columns: ["donation_id"]
+            isOneToOne: false
+            referencedRelation: "donations_safe"
+            referencedColumns: ["id"]
+          },
         ]
       }
       donations: {
@@ -1107,9 +1114,84 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      donations_safe: {
+        Row: {
+          allocated_amount: number | null
+          amount: number | null
+          created_at: string | null
+          currency: string | null
+          donor_email: string | null
+          donor_id: string | null
+          donor_name: string | null
+          id: string | null
+          is_anonymous: boolean | null
+          message: string | null
+          payment_method: string | null
+          payment_status: string | null
+          remaining_amount: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          allocated_amount?: number | null
+          amount?: number | null
+          created_at?: string | null
+          currency?: string | null
+          donor_email?: never
+          donor_id?: string | null
+          donor_name?: never
+          id?: string | null
+          is_anonymous?: boolean | null
+          message?: string | null
+          payment_method?: string | null
+          payment_status?: string | null
+          remaining_amount?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          allocated_amount?: number | null
+          amount?: number | null
+          created_at?: string | null
+          currency?: string | null
+          donor_email?: never
+          donor_id?: string | null
+          donor_name?: never
+          id?: string | null
+          is_anonymous?: boolean | null
+          message?: string | null
+          payment_method?: string | null
+          payment_status?: string | null
+          remaining_amount?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      public_profiles: {
+        Row: {
+          avatar_url: string | null
+          full_name: string | null
+          full_name_ar: string | null
+          user_id: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          full_name?: string | null
+          full_name_ar?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          full_name?: string | null
+          full_name_ar?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
+      get_donation_display_info: {
+        Args: { donation_row: Database["public"]["Tables"]["donations"]["Row"] }
+        Returns: Json
+      }
       get_user_role: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
