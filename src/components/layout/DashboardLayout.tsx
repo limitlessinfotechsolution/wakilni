@@ -1,7 +1,7 @@
 import { ReactNode } from 'react';
 import { EnhancedSidebar } from './EnhancedSidebar';
 import { EnhancedHeader } from './EnhancedHeader';
-import { MobileBottomNav } from './MobileBottomNav';
+import { FloatingTabBar } from '@/components/app-shell';
 import { useAuth } from '@/lib/auth';
 import { cn } from '@/lib/utils';
 
@@ -33,13 +33,16 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       <div className="hidden lg:block">
         <EnhancedSidebar />
       </div>
+      
       <div className="flex-1 flex flex-col min-h-screen w-full">
         <EnhancedHeader showNav={false} />
-        <main className="flex-1 overflow-auto pb-0 md:pb-0">
+        
+        <main className="flex-1 overflow-auto pb-24 lg:pb-0">
           {children}
         </main>
-        {/* Mobile Bottom Nav - shown on mobile and tablet */}
-        <MobileBottomNav />
+        
+        {/* Floating Tab Bar for mobile/tablet */}
+        <FloatingTabBar />
       </div>
     </div>
   );
