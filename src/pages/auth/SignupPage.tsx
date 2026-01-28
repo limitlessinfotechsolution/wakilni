@@ -2,14 +2,13 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
   Eye, EyeOff, Mail, Lock, User, ArrowLeft, ArrowRight, 
-  Phone, MapPin, Building2, CheckCircle2, FileText, Upload
+  Phone, MapPin, Building2, CheckCircle2, FileText, Sparkles
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
+import { GlassCard } from '@/components/cards';
 import { useLanguage } from '@/lib/i18n';
 import { useAuth } from '@/lib/auth';
 import { useToast } from '@/hooks/use-toast';
@@ -27,12 +26,10 @@ interface FormData {
   fullName: string;
   fullNameAr: string;
   phone: string;
-  // Provider specific
   companyName: string;
   companyNameAr: string;
   bio: string;
   bioAr: string;
-  // Vendor specific
   commercialReg: string;
   taxNumber: string;
   address: string;
@@ -45,6 +42,30 @@ const ROLE_STEPS: Record<RoleType, StepType[]> = {
   vendor: ['role', 'account', 'profile', 'complete'],
 };
 
+const roleConfig = {
+  traveler: {
+    icon: '🧳',
+    gradient: 'from-emerald-500 to-teal-500',
+    bgGradient: 'from-emerald-500/20 to-teal-500/20',
+    benefits: ['Book services', 'Track bookings', 'Receive proofs'],
+    benefitsAr: ['حجز خدمات', 'تتبع الحجوزات', 'استلام الإثباتات'],
+  },
+  provider: {
+    icon: '🕋',
+    gradient: 'from-amber-500 to-orange-500',
+    bgGradient: 'from-amber-500/20 to-orange-500/20',
+    benefits: ['Offer services', 'Earn income', 'Build reputation'],
+    benefitsAr: ['تقديم خدمات', 'كسب الأرباح', 'بناء السمعة'],
+  },
+  vendor: {
+    icon: '🏢',
+    gradient: 'from-blue-500 to-indigo-500',
+    bgGradient: 'from-blue-500/20 to-indigo-500/20',
+    benefits: ['Manage team', 'Scale operations', 'Analytics'],
+    benefitsAr: ['إدارة فريق', 'توسيع العمليات', 'التحليلات'],
+  },
+};
+
 export default function SignupPage() {
   const { t, isRTL } = useLanguage();
   const { signUp } = useAuth();
@@ -55,6 +76,7 @@ export default function SignupPage() {
   const [selectedRole, setSelectedRole] = useState<RoleType>('traveler');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [focusedField, setFocusedField] = useState<string | null>(null);
 
   const [formData, setFormData] = useState<FormData>({
     email: '',
@@ -97,7 +119,6 @@ export default function SignupPage() {
   };
 
   const handleNext = () => {
-    // Validate current step
     if (currentStep === 'account') {
       if (!formData.email || !formData.password || !formData.fullName) {
         toast({
@@ -154,7 +175,6 @@ export default function SignupPage() {
     setCurrentStep('complete');
     setIsLoading(false);
 
-    // Navigate after delay
     setTimeout(() => {
       navigate(selectedRole === 'provider' ? '/provider' : selectedRole === 'vendor' ? '/vendor' : '/dashboard');
     }, 2000);
@@ -171,50 +191,76 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-background pattern-islamic">
+    <div className="min-h-screen flex flex-col bg-background relative overflow-hidden">
+      {/* Animated Background */}
+      <div className="absolute inset-0 -z-10">
+        <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-primary/10 rounded-full blur-[100px] animate-pulse" />
+        <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-secondary/15 rounded-full blur-[80px] animate-pulse delay-1000" />
+        <div className="absolute inset-0 pattern-islamic opacity-30" />
+      </div>
+
       {/* Header */}
-      <div className="flex items-center justify-between p-4">
-        <Link to="/" className="flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-            <span className={`text-lg font-bold ${isRTL ? 'font-arabic' : ''}`}>و</span>
+      <header className="flex items-center justify-between p-4 md:p-6 relative z-10">
+        <Link to="/" className="flex items-center gap-3 group">
+          <div className={cn(
+            'flex h-10 w-10 items-center justify-center rounded-xl',
+            'bg-gradient-to-br from-primary to-primary/80 text-primary-foreground',
+            'shadow-lg shadow-primary/30 group-hover:shadow-xl group-hover:shadow-primary/40',
+            'transition-all duration-300 group-hover:scale-105'
+          )}>
+            <span className={cn('text-lg font-bold', isRTL && 'font-arabic')}>و</span>
           </div>
-          <span className={`text-xl font-semibold ${isRTL ? 'font-arabic' : ''}`}>{t.brand}</span>
+          <span className={cn(
+            'text-xl font-semibold gradient-text-sacred',
+            isRTL && 'font-arabic'
+          )}>
+            {t.brand}
+          </span>
         </Link>
         <div className="flex items-center gap-2">
           <ThemeToggle />
           <LanguageToggle />
         </div>
-      </div>
+      </header>
 
       {/* Content */}
-      <div className="flex-1 flex items-center justify-center p-4">
-        <Card className="w-full max-w-lg">
-          {/* Progress Indicator */}
-          {currentStep !== 'role' && (
-            <div className="px-6 pt-6">
-              <div className="flex items-center justify-between mb-2">
+      <main className="flex-1 flex items-center justify-center p-4 md:p-6">
+        <div className="w-full max-w-lg animate-fade-in">
+          {/* Progress Indicator - Outside Card */}
+          {currentStep !== 'role' && currentStep !== 'complete' && (
+            <div className="mb-6">
+              <div className="flex items-center justify-between mb-3">
                 {steps.map((step, index) => (
-                  <div key={step} className="flex items-center">
-                    <div
-                      className={cn(
-                        'w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors',
-                        index < currentStepIndex
-                          ? 'bg-primary text-primary-foreground'
-                          : index === currentStepIndex
-                          ? 'bg-primary text-primary-foreground'
-                          : 'bg-muted text-muted-foreground'
-                      )}
-                    >
-                      {index < currentStepIndex ? (
-                        <CheckCircle2 className="h-5 w-5" />
-                      ) : (
-                        index + 1
-                      )}
+                  <div key={step} className="flex items-center flex-1">
+                    <div className="relative flex flex-col items-center">
+                      <div
+                        className={cn(
+                          'w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold',
+                          'transition-all duration-300',
+                          index < currentStepIndex
+                            ? 'bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-lg shadow-primary/30'
+                            : index === currentStepIndex
+                            ? 'bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-lg shadow-primary/30 ring-4 ring-primary/20'
+                            : 'bg-muted text-muted-foreground'
+                        )}
+                      >
+                        {index < currentStepIndex ? (
+                          <CheckCircle2 className="h-5 w-5" />
+                        ) : (
+                          index + 1
+                        )}
+                      </div>
+                      <span className={cn(
+                        'absolute -bottom-6 text-xs whitespace-nowrap',
+                        index <= currentStepIndex ? 'text-primary font-medium' : 'text-muted-foreground'
+                      )}>
+                        {getStepLabel(step)}
+                      </span>
                     </div>
                     {index < steps.length - 1 && (
                       <div
                         className={cn(
-                          'w-12 sm:w-20 h-1 mx-1',
+                          'flex-1 h-1 mx-2 rounded-full transition-colors duration-300',
                           index < currentStepIndex ? 'bg-primary' : 'bg-muted'
                         )}
                       />
@@ -222,422 +268,467 @@ export default function SignupPage() {
                   </div>
                 ))}
               </div>
-              <p className="text-center text-sm text-muted-foreground">
-                {getStepLabel(currentStep)}
-              </p>
             </div>
           )}
 
-          {/* Step: Role Selection */}
-          {currentStep === 'role' && (
-            <>
-              <CardHeader className="text-center">
-                <CardTitle className={`text-2xl ${isRTL ? 'font-arabic' : ''}`}>
-                  {t.auth.signupAs}
-                </CardTitle>
-                <CardDescription>{isRTL ? 'اختر نوع حسابك' : 'Choose your account type'}</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {/* Traveler */}
-                <button
-                  onClick={() => handleRoleSelect('traveler')}
-                  className="w-full p-4 border border-border rounded-xl hover:border-primary hover:bg-primary/5 transition-all text-start group"
-                >
-                  <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
-                      <User className="h-6 w-6" />
+          {/* Card */}
+          <div className="relative p-px rounded-3xl bg-gradient-to-br from-primary/50 via-transparent to-secondary/50 mt-8">
+            <GlassCard className="rounded-[23px] p-6 md:p-8">
+              {/* Step: Role Selection */}
+              {currentStep === 'role' && (
+                <div className="space-y-6">
+                  <div className="text-center">
+                    <div className="inline-flex items-center gap-2 text-primary mb-4">
+                      <Sparkles className="h-5 w-5" />
                     </div>
-                    <div className="flex-1">
-                      <h3 className="font-semibold">{t.auth.traveler}</h3>
-                      <p className="text-sm text-muted-foreground">{t.auth.travelerDesc}</p>
-                      <div className="flex flex-wrap gap-1 mt-2">
-                        <span className="text-xs px-2 py-0.5 bg-muted rounded-full">
-                          {isRTL ? 'حجز خدمات' : 'Book services'}
-                        </span>
-                        <span className="text-xs px-2 py-0.5 bg-muted rounded-full">
-                          {isRTL ? 'تتبع الحجوزات' : 'Track bookings'}
-                        </span>
+                    <h1 className={cn('text-2xl md:text-3xl font-bold mb-2', isRTL && 'font-arabic')}>
+                      {t.auth.signupAs}
+                    </h1>
+                    <p className="text-muted-foreground">
+                      {isRTL ? 'اختر نوع حسابك' : 'Choose your account type'}
+                    </p>
+                  </div>
+
+                  {/* Role Cards */}
+                  <div className="space-y-4">
+                    {(Object.keys(roleConfig) as RoleType[]).map((role) => {
+                      const config = roleConfig[role];
+                      return (
+                        <button
+                          key={role}
+                          onClick={() => handleRoleSelect(role)}
+                          className={cn(
+                            'w-full p-5 rounded-2xl border-2 text-start',
+                            'transition-all duration-300 group',
+                            'hover:scale-[1.02] active:scale-[0.98]',
+                            'border-border/50 hover:border-primary/50',
+                            'hover:shadow-lg hover:shadow-primary/10'
+                          )}
+                        >
+                          <div className="flex items-start gap-4">
+                            <div className={cn(
+                              'w-14 h-14 rounded-2xl flex items-center justify-center text-2xl',
+                              'bg-gradient-to-br transition-all duration-300',
+                              config.bgGradient,
+                              'group-hover:scale-110'
+                            )}>
+                              {config.icon}
+                            </div>
+                            <div className="flex-1">
+                              <h3 className="font-semibold text-lg mb-1">
+                                {role === 'traveler' ? t.auth.traveler : 
+                                 role === 'provider' ? t.auth.provider : 
+                                 (isRTL ? 'شركة خدمات' : 'Service Vendor')}
+                              </h3>
+                              <p className="text-sm text-muted-foreground mb-3">
+                                {role === 'traveler' ? t.auth.travelerDesc : 
+                                 role === 'provider' ? t.auth.providerDesc : 
+                                 (isRTL ? 'إدارة وكالة السفر ومقدمي الخدمات' : 'Manage your travel agency and providers')}
+                              </p>
+                              <div className="flex flex-wrap gap-2">
+                                {(isRTL ? config.benefitsAr : config.benefits).map((benefit, i) => (
+                                  <span 
+                                    key={i}
+                                    className={cn(
+                                      'text-xs px-2.5 py-1 rounded-full',
+                                      'bg-muted text-muted-foreground'
+                                    )}
+                                  >
+                                    {benefit}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                            <ForwardArrow className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <p className="text-center text-sm text-muted-foreground">
+                    {t.auth.hasAccount}{' '}
+                    <Link to="/login" className="text-primary font-medium hover:underline">
+                      {t.auth.login}
+                    </Link>
+                  </p>
+                </div>
+              )}
+
+              {/* Step: Account Details */}
+              {currentStep === 'account' && (
+                <div className="space-y-5">
+                  <button
+                    onClick={handleBack}
+                    className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    <BackArrow className="h-4 w-4" />
+                    {t.common.back}
+                  </button>
+                  
+                  <div>
+                    <h2 className={cn('text-xl font-bold mb-1', isRTL && 'font-arabic')}>
+                      {isRTL ? 'معلومات الحساب' : 'Account Information'}
+                    </h2>
+                    <p className="text-sm text-muted-foreground">
+                      {isRTL ? 'أدخل بياناتك الأساسية' : 'Enter your basic information'}
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>{isRTL ? 'الاسم الكامل (إنجليزي)' : 'Full Name (English)'}</Label>
+                      <div className="relative">
+                        <User className={cn(
+                          'absolute top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground',
+                          isRTL ? 'right-4' : 'left-4'
+                        )} />
+                        <Input
+                          value={formData.fullName}
+                          onChange={(e) => updateForm('fullName', e.target.value)}
+                          className={cn('h-11 rounded-xl', isRTL ? 'pr-11' : 'pl-11')}
+                          placeholder="John Doe"
+                          required
+                        />
                       </div>
                     </div>
-                  </div>
-                </button>
-
-                {/* Provider */}
-                <button
-                  onClick={() => handleRoleSelect('provider')}
-                  className="w-full p-4 border border-border rounded-xl hover:border-secondary hover:bg-secondary/5 transition-all text-start group"
-                >
-                  <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 rounded-lg bg-secondary/10 flex items-center justify-center group-hover:bg-secondary group-hover:text-secondary-foreground transition-colors">
-                      <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
-                      </svg>
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="font-semibold">{t.auth.provider}</h3>
-                      <p className="text-sm text-muted-foreground">{t.auth.providerDesc}</p>
-                      <div className="flex flex-wrap gap-1 mt-2">
-                        <span className="text-xs px-2 py-0.5 bg-muted rounded-full">
-                          {isRTL ? 'تقديم خدمات' : 'Offer services'}
-                        </span>
-                        <span className="text-xs px-2 py-0.5 bg-muted rounded-full">
-                          {isRTL ? 'كسب الأرباح' : 'Earn income'}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </button>
-
-                {/* Vendor */}
-                <button
-                  onClick={() => handleRoleSelect('vendor')}
-                  className="w-full p-4 border border-border rounded-xl hover:border-accent hover:bg-accent/5 transition-all text-start group"
-                >
-                  <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 rounded-lg bg-accent/10 flex items-center justify-center group-hover:bg-accent group-hover:text-accent-foreground transition-colors">
-                      <Building2 className="h-6 w-6" />
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="font-semibold">{isRTL ? 'شركة خدمات' : 'Service Vendor'}</h3>
-                      <p className="text-sm text-muted-foreground">
-                        {isRTL ? 'إدارة وكالة السفر ومقدمي الخدمات' : 'Manage your travel agency and providers'}
-                      </p>
-                      <div className="flex flex-wrap gap-1 mt-2">
-                        <span className="text-xs px-2 py-0.5 bg-muted rounded-full">
-                          {isRTL ? 'إدارة فريق' : 'Manage team'}
-                        </span>
-                        <span className="text-xs px-2 py-0.5 bg-muted rounded-full">
-                          {isRTL ? 'اشتراكات' : 'Subscriptions'}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </button>
-              </CardContent>
-              <CardFooter className="flex justify-center">
-                <p className="text-sm text-muted-foreground">
-                  {t.auth.hasAccount}{' '}
-                  <Link to="/login" className="text-primary font-medium hover:underline">
-                    {t.auth.login}
-                  </Link>
-                </p>
-              </CardFooter>
-            </>
-          )}
-
-          {/* Step: Account Details */}
-          {currentStep === 'account' && (
-            <>
-              <CardHeader>
-                <button
-                  onClick={handleBack}
-                  className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-2"
-                >
-                  <BackArrow className="h-4 w-4" />
-                  {t.common.back}
-                </button>
-                <CardTitle className={`text-xl ${isRTL ? 'font-arabic' : ''}`}>
-                  {isRTL ? 'معلومات الحساب' : 'Account Information'}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="fullName">{isRTL ? 'الاسم الكامل (إنجليزي)' : 'Full Name (English)'}</Label>
-                    <div className="relative">
-                      <User className={`absolute top-3 h-4 w-4 text-muted-foreground ${isRTL ? 'right-3' : 'left-3'}`} />
+                    <div className="space-y-2">
+                      <Label>{isRTL ? 'الاسم الكامل (عربي)' : 'Full Name (Arabic)'}</Label>
                       <Input
-                        id="fullName"
-                        value={formData.fullName}
-                        onChange={(e) => updateForm('fullName', e.target.value)}
-                        className={isRTL ? 'pr-10' : 'pl-10'}
-                        placeholder="John Doe"
+                        value={formData.fullNameAr}
+                        onChange={(e) => updateForm('fullNameAr', e.target.value)}
+                        className="h-11 rounded-xl"
+                        placeholder="الاسم الكامل"
+                        dir="rtl"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>{t.auth.email}</Label>
+                    <div className="relative">
+                      <Mail className={cn(
+                        'absolute top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground',
+                        isRTL ? 'right-4' : 'left-4'
+                      )} />
+                      <Input
+                        type="email"
+                        value={formData.email}
+                        onChange={(e) => updateForm('email', e.target.value)}
+                        className={cn('h-11 rounded-xl', isRTL ? 'pr-11' : 'pl-11')}
+                        placeholder="you@example.com"
                         required
                       />
                     </div>
                   </div>
+
                   <div className="space-y-2">
-                    <Label htmlFor="fullNameAr">{isRTL ? 'الاسم الكامل (عربي)' : 'Full Name (Arabic)'}</Label>
-                    <Input
-                      id="fullNameAr"
-                      value={formData.fullNameAr}
-                      onChange={(e) => updateForm('fullNameAr', e.target.value)}
-                      placeholder="الاسم الكامل"
+                    <Label>{isRTL ? 'رقم الهاتف' : 'Phone Number'}</Label>
+                    <div className="relative">
+                      <Phone className={cn(
+                        'absolute top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground',
+                        isRTL ? 'right-4' : 'left-4'
+                      )} />
+                      <Input
+                        type="tel"
+                        value={formData.phone}
+                        onChange={(e) => updateForm('phone', e.target.value)}
+                        className={cn('h-11 rounded-xl', isRTL ? 'pr-11' : 'pl-11')}
+                        placeholder="+966 5XX XXX XXXX"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>{t.auth.password}</Label>
+                    <div className="relative">
+                      <Lock className={cn(
+                        'absolute top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground',
+                        isRTL ? 'right-4' : 'left-4'
+                      )} />
+                      <Input
+                        type={showPassword ? 'text' : 'password'}
+                        value={formData.password}
+                        onChange={(e) => updateForm('password', e.target.value)}
+                        className={cn('h-11 rounded-xl', isRTL ? 'pr-11 pl-11' : 'pl-11 pr-11')}
+                        placeholder="••••••••"
+                        required
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className={cn(
+                          'absolute top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground',
+                          isRTL ? 'left-4' : 'right-4'
+                        )}
+                      >
+                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {isRTL ? 'يجب أن تكون 8 أحرف على الأقل' : 'Must be at least 8 characters'}
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>{t.auth.confirmPassword}</Label>
+                    <div className="relative">
+                      <Lock className={cn(
+                        'absolute top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground',
+                        isRTL ? 'right-4' : 'left-4'
+                      )} />
+                      <Input
+                        type="password"
+                        value={formData.confirmPassword}
+                        onChange={(e) => updateForm('confirmPassword', e.target.value)}
+                        className={cn('h-11 rounded-xl', isRTL ? 'pr-11' : 'pl-11')}
+                        placeholder="••••••••"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <Button 
+                    onClick={selectedRole === 'traveler' ? handleSubmit : handleNext} 
+                    className={cn(
+                      'w-full h-12 rounded-xl font-medium',
+                      'bg-gradient-to-r from-primary to-primary/90',
+                      'shadow-lg shadow-primary/30 hover:shadow-xl',
+                      'transition-all duration-300'
+                    )} 
+                    disabled={isLoading}
+                  >
+                    {isLoading ? t.common.loading : selectedRole === 'traveler' ? t.auth.signup : (isRTL ? 'التالي' : 'Next')}
+                    {!isLoading && selectedRole !== 'traveler' && <ForwardArrow className="h-4 w-4 ms-2" />}
+                  </Button>
+                </div>
+              )}
+
+              {/* Step: Profile (Provider) */}
+              {currentStep === 'profile' && selectedRole === 'provider' && (
+                <div className="space-y-5">
+                  <button
+                    onClick={handleBack}
+                    className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    <BackArrow className="h-4 w-4" />
+                    {t.common.back}
+                  </button>
+                  
+                  <div>
+                    <h2 className={cn('text-xl font-bold mb-1', isRTL && 'font-arabic')}>
+                      {isRTL ? 'معلومات المزود' : 'Provider Information'}
+                    </h2>
+                    <p className="text-sm text-muted-foreground">
+                      {isRTL ? 'أخبرنا المزيد عنك' : 'Tell us more about yourself'}
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>{isRTL ? 'اسم الشركة (إنجليزي)' : 'Company Name (English)'}</Label>
+                      <Input
+                        value={formData.companyName}
+                        onChange={(e) => updateForm('companyName', e.target.value)}
+                        className="h-11 rounded-xl"
+                        placeholder="My Company"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>{isRTL ? 'اسم الشركة (عربي)' : 'Company Name (Arabic)'}</Label>
+                      <Input
+                        value={formData.companyNameAr}
+                        onChange={(e) => updateForm('companyNameAr', e.target.value)}
+                        className="h-11 rounded-xl"
+                        placeholder="اسم الشركة"
+                        dir="rtl"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>{isRTL ? 'نبذة عنك (إنجليزي)' : 'Bio (English)'}</Label>
+                    <Textarea
+                      value={formData.bio}
+                      onChange={(e) => updateForm('bio', e.target.value)}
+                      className="rounded-xl resize-none"
+                      placeholder="Tell travelers about your experience..."
+                      rows={3}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>{isRTL ? 'نبذة عنك (عربي)' : 'Bio (Arabic)'}</Label>
+                    <Textarea
+                      value={formData.bioAr}
+                      onChange={(e) => updateForm('bioAr', e.target.value)}
+                      className="rounded-xl resize-none"
+                      placeholder="أخبر المسافرين عن خبرتك..."
+                      rows={3}
                       dir="rtl"
                     />
                   </div>
-                </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="email">{t.auth.email}</Label>
-                  <div className="relative">
-                    <Mail className={`absolute top-3 h-4 w-4 text-muted-foreground ${isRTL ? 'right-3' : 'left-3'}`} />
-                    <Input
-                      id="email"
-                      type="email"
-                      value={formData.email}
-                      onChange={(e) => updateForm('email', e.target.value)}
-                      className={isRTL ? 'pr-10' : 'pl-10'}
-                      placeholder="you@example.com"
-                      required
-                    />
+                  <div className="p-4 rounded-xl bg-muted/50 border border-border/50">
+                    <p className="text-sm text-muted-foreground flex items-start gap-2">
+                      <FileText className="h-4 w-4 mt-0.5 shrink-0" />
+                      {isRTL 
+                        ? 'سيُطلب منك إكمال التحقق (KYC) لاحقاً لبدء تقديم الخدمات'
+                        : 'You will be asked to complete verification (KYC) later to start offering services'}
+                    </p>
                   </div>
-                </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="phone">{isRTL ? 'رقم الهاتف' : 'Phone Number'}</Label>
-                  <div className="relative">
-                    <Phone className={`absolute top-3 h-4 w-4 text-muted-foreground ${isRTL ? 'right-3' : 'left-3'}`} />
-                    <Input
-                      id="phone"
-                      type="tel"
-                      value={formData.phone}
-                      onChange={(e) => updateForm('phone', e.target.value)}
-                      className={isRTL ? 'pr-10' : 'pl-10'}
-                      placeholder="+966 5XX XXX XXXX"
-                    />
-                  </div>
+                  <Button 
+                    onClick={handleSubmit} 
+                    className={cn(
+                      'w-full h-12 rounded-xl font-medium',
+                      'bg-gradient-to-r from-primary to-primary/90',
+                      'shadow-lg shadow-primary/30 hover:shadow-xl',
+                      'transition-all duration-300'
+                    )} 
+                    disabled={isLoading}
+                  >
+                    {isLoading ? t.common.loading : t.auth.signup}
+                  </Button>
                 </div>
+              )}
 
-                <div className="space-y-2">
-                  <Label htmlFor="password">{t.auth.password}</Label>
-                  <div className="relative">
-                    <Lock className={`absolute top-3 h-4 w-4 text-muted-foreground ${isRTL ? 'right-3' : 'left-3'}`} />
-                    <Input
-                      id="password"
-                      type={showPassword ? 'text' : 'password'}
-                      value={formData.password}
-                      onChange={(e) => updateForm('password', e.target.value)}
-                      className={isRTL ? 'pr-10 pl-10' : 'pl-10 pr-10'}
-                      placeholder="••••••••"
-                      required
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className={`absolute top-3 text-muted-foreground hover:text-foreground ${isRTL ? 'left-3' : 'right-3'}`}
-                    >
-                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
+              {/* Step: Profile (Vendor) */}
+              {currentStep === 'profile' && selectedRole === 'vendor' && (
+                <div className="space-y-5">
+                  <button
+                    onClick={handleBack}
+                    className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    <BackArrow className="h-4 w-4" />
+                    {t.common.back}
+                  </button>
+                  
+                  <div>
+                    <h2 className={cn('text-xl font-bold mb-1', isRTL && 'font-arabic')}>
+                      {isRTL ? 'معلومات الشركة' : 'Company Information'}
+                    </h2>
+                    <p className="text-sm text-muted-foreground">
+                      {isRTL ? 'بيانات شركتك الرسمية' : 'Your official company details'}
+                    </p>
                   </div>
-                  <p className="text-xs text-muted-foreground">
-                    {isRTL ? 'يجب أن تكون 8 أحرف على الأقل' : 'Must be at least 8 characters'}
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>{isRTL ? 'اسم الشركة (إنجليزي)' : 'Company Name (English)'}</Label>
+                      <Input
+                        value={formData.companyName}
+                        onChange={(e) => updateForm('companyName', e.target.value)}
+                        className="h-11 rounded-xl"
+                        placeholder="Travel Agency LLC"
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>{isRTL ? 'اسم الشركة (عربي)' : 'Company Name (Arabic)'}</Label>
+                      <Input
+                        value={formData.companyNameAr}
+                        onChange={(e) => updateForm('companyNameAr', e.target.value)}
+                        className="h-11 rounded-xl"
+                        placeholder="وكالة السفر"
+                        dir="rtl"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>{isRTL ? 'رقم السجل التجاري' : 'Commercial Registration'}</Label>
+                      <Input
+                        value={formData.commercialReg}
+                        onChange={(e) => updateForm('commercialReg', e.target.value)}
+                        className="h-11 rounded-xl"
+                        placeholder="1234567890"
+                        maxLength={10}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>{isRTL ? 'الرقم الضريبي' : 'Tax/VAT Number'}</Label>
+                      <Input
+                        value={formData.taxNumber}
+                        onChange={(e) => updateForm('taxNumber', e.target.value)}
+                        className="h-11 rounded-xl"
+                        placeholder="300000000000003"
+                        maxLength={15}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>{isRTL ? 'العنوان (إنجليزي)' : 'Address (English)'}</Label>
+                    <div className="relative">
+                      <MapPin className={cn(
+                        'absolute top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground',
+                        isRTL ? 'right-4' : 'left-4'
+                      )} />
+                      <Input
+                        value={formData.address}
+                        onChange={(e) => updateForm('address', e.target.value)}
+                        className={cn('h-11 rounded-xl', isRTL ? 'pr-11' : 'pl-11')}
+                        placeholder="123 Main St, Riyadh"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="p-4 rounded-xl bg-muted/50 border border-border/50">
+                    <p className="text-sm text-muted-foreground flex items-start gap-2">
+                      <FileText className="h-4 w-4 mt-0.5 shrink-0" />
+                      {isRTL 
+                        ? 'سيُطلب منك إكمال التحقق (KYC) وإرفاق المستندات لاحقاً'
+                        : 'You will be asked to complete verification (KYC) and upload documents later'}
+                    </p>
+                  </div>
+
+                  <Button 
+                    onClick={handleSubmit} 
+                    className={cn(
+                      'w-full h-12 rounded-xl font-medium',
+                      'bg-gradient-to-r from-primary to-primary/90',
+                      'shadow-lg shadow-primary/30 hover:shadow-xl',
+                      'transition-all duration-300'
+                    )} 
+                    disabled={isLoading}
+                  >
+                    {isLoading ? t.common.loading : t.auth.signup}
+                  </Button>
+                </div>
+              )}
+
+              {/* Step: Complete */}
+              {currentStep === 'complete' && (
+                <div className="text-center py-8">
+                  <div className={cn(
+                    'w-20 h-20 rounded-full mx-auto mb-6',
+                    'bg-gradient-to-br from-green-500 to-emerald-500',
+                    'flex items-center justify-center',
+                    'shadow-xl shadow-green-500/30',
+                    'animate-scale-in'
+                  )}>
+                    <CheckCircle2 className="h-10 w-10 text-white" />
+                  </div>
+                  <h2 className={cn('text-2xl font-bold mb-2', isRTL && 'font-arabic')}>
+                    {isRTL ? '🎉 تهانينا!' : '🎉 Congratulations!'}
+                  </h2>
+                  <p className="text-muted-foreground mb-6">
+                    {isRTL ? 'تم إنشاء حسابك بنجاح' : 'Your account has been created successfully'}
                   </p>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="confirmPassword">{t.auth.confirmPassword}</Label>
-                  <div className="relative">
-                    <Lock className={`absolute top-3 h-4 w-4 text-muted-foreground ${isRTL ? 'right-3' : 'left-3'}`} />
-                    <Input
-                      id="confirmPassword"
-                      type="password"
-                      value={formData.confirmPassword}
-                      onChange={(e) => updateForm('confirmPassword', e.target.value)}
-                      className={isRTL ? 'pr-10' : 'pl-10'}
-                      placeholder="••••••••"
-                      required
-                    />
-                  </div>
-                </div>
-              </CardContent>
-              <CardFooter>
-                <Button onClick={selectedRole === 'traveler' ? handleSubmit : handleNext} className="w-full" disabled={isLoading}>
-                  {isLoading ? t.common.loading : selectedRole === 'traveler' ? t.auth.signup : (isRTL ? 'التالي' : 'Next')}
-                  {!isLoading && selectedRole !== 'traveler' && <ForwardArrow className="h-4 w-4 ms-2" />}
-                </Button>
-              </CardFooter>
-            </>
-          )}
-
-          {/* Step: Profile (Provider) */}
-          {currentStep === 'profile' && selectedRole === 'provider' && (
-            <>
-              <CardHeader>
-                <button
-                  onClick={handleBack}
-                  className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-2"
-                >
-                  <BackArrow className="h-4 w-4" />
-                  {t.common.back}
-                </button>
-                <CardTitle className={`text-xl ${isRTL ? 'font-arabic' : ''}`}>
-                  {isRTL ? 'معلومات المزود' : 'Provider Information'}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>{isRTL ? 'اسم الشركة (إنجليزي)' : 'Company Name (English)'}</Label>
-                    <Input
-                      value={formData.companyName}
-                      onChange={(e) => updateForm('companyName', e.target.value)}
-                      placeholder="My Company"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>{isRTL ? 'اسم الشركة (عربي)' : 'Company Name (Arabic)'}</Label>
-                    <Input
-                      value={formData.companyNameAr}
-                      onChange={(e) => updateForm('companyNameAr', e.target.value)}
-                      placeholder="اسم الشركة"
-                      dir="rtl"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>{isRTL ? 'نبذة عنك (إنجليزي)' : 'Bio (English)'}</Label>
-                  <Textarea
-                    value={formData.bio}
-                    onChange={(e) => updateForm('bio', e.target.value)}
-                    placeholder="Tell travelers about your experience..."
-                    rows={3}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label>{isRTL ? 'نبذة عنك (عربي)' : 'Bio (Arabic)'}</Label>
-                  <Textarea
-                    value={formData.bioAr}
-                    onChange={(e) => updateForm('bioAr', e.target.value)}
-                    placeholder="أخبر المسافرين عن خبرتك..."
-                    rows={3}
-                    dir="rtl"
-                  />
-                </div>
-
-                <div className="bg-muted/50 p-4 rounded-lg">
-                  <p className="text-sm text-muted-foreground">
-                    <FileText className="h-4 w-4 inline me-1" />
-                    {isRTL 
-                      ? 'سيُطلب منك إكمال التحقق (KYC) لاحقاً لبدء تقديم الخدمات'
-                      : 'You will be asked to complete verification (KYC) later to start offering services'}
+                  <p className="text-sm text-muted-foreground mb-4">
+                    {isRTL ? 'جاري توجيهك إلى لوحة التحكم...' : 'Redirecting you to your dashboard...'}
                   </p>
-                </div>
-              </CardContent>
-              <CardFooter>
-                <Button onClick={handleSubmit} className="w-full" disabled={isLoading}>
-                  {isLoading ? t.common.loading : t.auth.signup}
-                </Button>
-              </CardFooter>
-            </>
-          )}
-
-          {/* Step: Profile (Vendor) */}
-          {currentStep === 'profile' && selectedRole === 'vendor' && (
-            <>
-              <CardHeader>
-                <button
-                  onClick={handleBack}
-                  className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-2"
-                >
-                  <BackArrow className="h-4 w-4" />
-                  {t.common.back}
-                </button>
-                <CardTitle className={`text-xl ${isRTL ? 'font-arabic' : ''}`}>
-                  {isRTL ? 'معلومات الشركة' : 'Company Information'}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>{isRTL ? 'اسم الشركة (إنجليزي)' : 'Company Name (English)'}</Label>
-                    <Input
-                      value={formData.companyName}
-                      onChange={(e) => updateForm('companyName', e.target.value)}
-                      placeholder="Travel Agency LLC"
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>{isRTL ? 'اسم الشركة (عربي)' : 'Company Name (Arabic)'}</Label>
-                    <Input
-                      value={formData.companyNameAr}
-                      onChange={(e) => updateForm('companyNameAr', e.target.value)}
-                      placeholder="وكالة السفر"
-                      dir="rtl"
-                    />
+                  <div className="flex justify-center">
+                    <div className="w-8 h-8 border-3 border-primary/30 border-t-primary rounded-full animate-spin" />
                   </div>
                 </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>{isRTL ? 'رقم السجل التجاري' : 'Commercial Registration'}</Label>
-                    <Input
-                      value={formData.commercialReg}
-                      onChange={(e) => updateForm('commercialReg', e.target.value)}
-                      placeholder="1234567890"
-                      maxLength={10}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>{isRTL ? 'الرقم الضريبي' : 'Tax/VAT Number'}</Label>
-                    <Input
-                      value={formData.taxNumber}
-                      onChange={(e) => updateForm('taxNumber', e.target.value)}
-                      placeholder="300000000000003"
-                      maxLength={15}
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>{isRTL ? 'العنوان (إنجليزي)' : 'Address (English)'}</Label>
-                  <div className="relative">
-                    <MapPin className={`absolute top-3 h-4 w-4 text-muted-foreground ${isRTL ? 'right-3' : 'left-3'}`} />
-                    <Input
-                      value={formData.address}
-                      onChange={(e) => updateForm('address', e.target.value)}
-                      className={isRTL ? 'pr-10' : 'pl-10'}
-                      placeholder="123 Main St, Riyadh"
-                    />
-                  </div>
-                </div>
-
-                <div className="bg-muted/50 p-4 rounded-lg">
-                  <p className="text-sm text-muted-foreground">
-                    <FileText className="h-4 w-4 inline me-1" />
-                    {isRTL 
-                      ? 'سيُطلب منك إكمال التحقق (KYC) وإرفاق المستندات لاحقاً'
-                      : 'You will be asked to complete verification (KYC) and upload documents later'}
-                  </p>
-                </div>
-              </CardContent>
-              <CardFooter>
-                <Button onClick={handleSubmit} className="w-full" disabled={isLoading}>
-                  {isLoading ? t.common.loading : t.auth.signup}
-                </Button>
-              </CardFooter>
-            </>
-          )}
-
-          {/* Step: Complete */}
-          {currentStep === 'complete' && (
-            <>
-              <CardHeader className="text-center">
-                <div className="mx-auto w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mb-4">
-                  <CheckCircle2 className="h-8 w-8 text-green-600" />
-                </div>
-                <CardTitle className={`text-2xl ${isRTL ? 'font-arabic' : ''}`}>
-                  {isRTL ? '🎉 تهانينا!' : '🎉 Congratulations!'}
-                </CardTitle>
-                <CardDescription>
-                  {isRTL ? 'تم إنشاء حسابك بنجاح' : 'Your account has been created successfully'}
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="text-center">
-                <p className="text-muted-foreground mb-4">
-                  {isRTL ? 'جاري توجيهك إلى لوحة التحكم...' : 'Redirecting you to your dashboard...'}
-                </p>
-                <div className="flex justify-center">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-                </div>
-              </CardContent>
-            </>
-          )}
-        </Card>
-      </div>
+              )}
+            </GlassCard>
+          </div>
+        </div>
+      </main>
     </div>
   );
 }
