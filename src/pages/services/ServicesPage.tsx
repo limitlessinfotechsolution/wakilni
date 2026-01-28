@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Search, Filter, Star, Clock, MapPin, ChevronDown, Grid3X3, List, Plus, Check } from 'lucide-react';
+import { Search, Filter, Star, Clock, MapPin, Grid3X3, List, Plus, Check, Sparkles, Compass, Moon } from 'lucide-react';
 import { MainLayout } from '@/components/layout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,7 +9,6 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -114,18 +113,31 @@ export default function ServicesPage() {
     return isRTL ? labels[type].ar : labels[type].en;
   };
 
+  const getServiceTypeBadgeColor = (type: ServiceType) => {
+    switch (type) {
+      case 'umrah':
+        return 'bg-emerald-500 text-white';
+      case 'hajj':
+        return 'bg-amber-500 text-white';
+      case 'ziyarat':
+        return 'bg-purple-500 text-white';
+      default:
+        return '';
+    }
+  };
+
   const ServiceCard = ({ service, isCompareSelected }: { service: typeof services[0]; isCompareSelected: boolean }) => (
     <Card className={cn(
-      'group overflow-hidden transition-all hover:shadow-lg',
-      isCompareSelected && 'ring-2 ring-primary'
+      'group overflow-hidden transition-all hover:shadow-lg border-2',
+      isCompareSelected && 'ring-2 ring-primary border-primary'
     )}>
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-2">
           <div className="flex-1 min-w-0">
-            <Badge variant="secondary" className="mb-2">
+            <Badge className={cn('mb-2', getServiceTypeBadgeColor(service.service_type))}>
               {getServiceTypeLabel(service.service_type)}
             </Badge>
-            <CardTitle className={cn('line-clamp-2', isRTL && 'font-arabic')}>
+            <CardTitle className={cn('line-clamp-2 text-base md:text-lg', isRTL && 'font-arabic')}>
               {isRTL && service.title_ar ? service.title_ar : service.title}
             </CardTitle>
           </div>
@@ -180,11 +192,11 @@ export default function ServicesPage() {
       </CardContent>
       <CardFooter className="flex items-center justify-between pt-3 border-t">
         <div>
-          <span className="text-2xl font-bold text-primary">
+          <span className="text-xl md:text-2xl font-bold text-primary">
             {service.currency || 'SAR'} {service.price.toLocaleString()}
           </span>
         </div>
-        <Button asChild>
+        <Button asChild size="sm">
           <Link to={user ? `/bookings/new?service=${service.id}` : '/login'}>
             {t.services.bookNow}
           </Link>
@@ -219,7 +231,7 @@ export default function ServicesPage() {
         <Label className={cn(isRTL && 'font-arabic')}>
           {isRTL ? 'الحد الأدنى للتقييم' : 'Minimum Rating'}
         </Label>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {[0, 3, 3.5, 4, 4.5].map((rating) => (
             <Button
               key={rating}
@@ -241,16 +253,55 @@ export default function ServicesPage() {
     </div>
   );
 
+  // Empty state component
+  const EmptyState = () => (
+    <Card className="p-8 md:p-12 bg-gradient-to-br from-muted/30 to-muted/10 border-dashed border-2">
+      <div className="text-center max-w-md mx-auto">
+        <div className="relative mx-auto w-24 h-24 mb-6">
+          <div className="absolute inset-0 bg-primary/10 rounded-full animate-pulse" />
+          <div className="absolute inset-2 bg-primary/20 rounded-full flex items-center justify-center">
+            <Moon className="h-10 w-10 text-primary" />
+          </div>
+        </div>
+        <h3 className={cn('text-xl font-bold mb-3', isRTL && 'font-arabic')}>
+          {isRTL ? 'لا توجد خدمات متاحة حالياً' : 'No Services Available Yet'}
+        </h3>
+        <p className={cn('text-muted-foreground mb-6 leading-relaxed', isRTL && 'font-arabic')}>
+          {isRTL 
+            ? 'نحن نعمل على إضافة خدمات عمرة وحج مميزة. يرجى التحقق مرة أخرى قريباً أو تعديل معايير البحث.'
+            : 'We\'re working on adding quality Umrah and Hajj services. Please check back soon or adjust your search criteria.'}
+        </p>
+        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+          <Button variant="outline" onClick={() => {
+            setPriceRange([0, 50000]);
+            setMinRating(0);
+            setSearchQuery('');
+            setServiceType(undefined);
+          }}>
+            <Sparkles className="h-4 w-4 me-2" />
+            {isRTL ? 'إعادة تعيين الفلاتر' : 'Reset Filters'}
+          </Button>
+          <Button asChild>
+            <Link to="/donate">
+              <Compass className="h-4 w-4 me-2" />
+              {isRTL ? 'دعم المحتاجين' : 'Support Those in Need'}
+            </Link>
+          </Button>
+        </div>
+      </div>
+    </Card>
+  );
+
   return (
     <MainLayout>
-      <div className="container py-6 space-y-6">
+      <div className="container py-6 px-4 space-y-6">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h1 className={cn('text-3xl font-bold', isRTL && 'font-arabic')}>
+            <h1 className={cn('text-2xl md:text-3xl font-bold', isRTL && 'font-arabic')}>
               {isRTL ? 'تصفح الخدمات' : 'Browse Services'}
             </h1>
-            <p className="text-muted-foreground mt-1">
+            <p className="text-muted-foreground mt-1 text-sm md:text-base">
               {isRTL 
                 ? `${filteredServices.length} خدمة متاحة`
                 : `${filteredServices.length} services available`
@@ -269,16 +320,16 @@ export default function ServicesPage() {
 
         {/* Service Type Tabs */}
         <Tabs value={serviceType || 'all'} onValueChange={handleTypeChange}>
-          <TabsList className="grid w-full grid-cols-4 max-w-md">
-            <TabsTrigger value="all">{t.services.allServices}</TabsTrigger>
-            <TabsTrigger value="umrah">{t.services.umrah}</TabsTrigger>
-            <TabsTrigger value="hajj">{t.services.hajj}</TabsTrigger>
-            <TabsTrigger value="ziyarat">{t.services.ziyarat}</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-4 max-w-md h-auto">
+            <TabsTrigger value="all" className="text-xs md:text-sm py-2">{t.services.allServices}</TabsTrigger>
+            <TabsTrigger value="umrah" className="text-xs md:text-sm py-2">{t.services.umrah}</TabsTrigger>
+            <TabsTrigger value="hajj" className="text-xs md:text-sm py-2">{t.services.hajj}</TabsTrigger>
+            <TabsTrigger value="ziyarat" className="text-xs md:text-sm py-2">{t.services.ziyarat}</TabsTrigger>
           </TabsList>
         </Tabs>
 
         {/* Search and Filters Bar */}
-        <div className="flex flex-col md:flex-row gap-4">
+        <div className="flex flex-col md:flex-row gap-3 md:gap-4">
           {/* Search */}
           <div className="relative flex-1">
             <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -362,7 +413,7 @@ export default function ServicesPage() {
           <div className="flex-1">
             {isLoading ? (
               <div className={cn(
-                'grid gap-6',
+                'grid gap-4 md:gap-6',
                 viewMode === 'grid' ? 'grid-cols-1 lg:grid-cols-2 xl:grid-cols-3' : 'grid-cols-1'
               )}>
                 {Array.from({ length: 6 }).map((_, i) => (
@@ -383,23 +434,10 @@ export default function ServicesPage() {
                 ))}
               </div>
             ) : filteredServices.length === 0 ? (
-              <Card className="p-12">
-                <div className="text-center">
-                  <Search className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                  <h3 className="text-lg font-medium mb-2">
-                    {isRTL ? 'لا توجد خدمات' : 'No services found'}
-                  </h3>
-                  <p className="text-muted-foreground">
-                    {isRTL 
-                      ? 'جرب تعديل معايير البحث أو التصفية'
-                      : 'Try adjusting your search or filter criteria'
-                    }
-                  </p>
-                </div>
-              </Card>
+              <EmptyState />
             ) : (
               <div className={cn(
-                'grid gap-6',
+                'grid gap-4 md:gap-6',
                 viewMode === 'grid' ? 'grid-cols-1 lg:grid-cols-2 xl:grid-cols-3' : 'grid-cols-1'
               )}>
                 {filteredServices.map((service) => (

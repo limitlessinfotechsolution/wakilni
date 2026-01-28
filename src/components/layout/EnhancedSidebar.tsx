@@ -181,6 +181,7 @@ export function EnhancedSidebar() {
   const getRoleThemeClass = () => {
     switch (role) {
       case 'super_admin':
+        return 'theme-super-admin';
       case 'admin':
         return 'theme-admin';
       case 'provider':

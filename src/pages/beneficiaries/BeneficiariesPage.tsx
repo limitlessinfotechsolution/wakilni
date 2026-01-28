@@ -19,7 +19,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { MainLayout } from '@/components/layout';
+import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { BeneficiaryForm } from '@/components/beneficiaries/BeneficiaryForm';
 import { BeneficiaryCard } from '@/components/beneficiaries/BeneficiaryCard';
 import { useBeneficiaries, type Beneficiary } from '@/hooks/useBeneficiaries';
@@ -82,8 +82,8 @@ export default function BeneficiariesPage() {
   };
 
   return (
-    <MainLayout>
-      <div className="container py-8 px-4">
+    <DashboardLayout>
+      <div className="p-4 md:p-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
           <div>
@@ -199,6 +199,6 @@ export default function BeneficiariesPage() {
           </AlertDialogContent>
         </AlertDialog>
       </div>
-    </MainLayout>
+    </DashboardLayout>
   );
 }

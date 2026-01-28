@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Heart, CreditCard, Building2, Wallet, Check, Gift } from 'lucide-react';
+import { Heart, CreditCard, Building2, Wallet, Check, Gift, Users, Sparkles, Star, Moon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -12,8 +12,18 @@ import { useLanguage } from '@/lib/i18n';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/lib/auth';
+import { cn } from '@/lib/utils';
+import { Progress } from '@/components/ui/progress';
 
 const PRESET_AMOUNTS = [50, 100, 250, 500, 1000, 5000];
+
+// Mock stats for demonstration
+const CHARITY_STATS = {
+  totalRaised: 125750,
+  goal: 500000,
+  beneficiariesHelped: 48,
+  activeRequests: 12,
+};
 
 export default function DonatePage() {
   const { isRTL } = useLanguage();
@@ -58,7 +68,6 @@ export default function DonatePage() {
     setIsSubmitting(true);
     
     try {
-      // Create donation record (mock payment - in production would integrate with Stripe)
       const { error } = await supabase.from('donations').insert({
         donor_id: user?.id || null,
         donor_name: isAnonymous ? null : donorName,
@@ -66,7 +75,7 @@ export default function DonatePage() {
         amount: amount,
         currency: 'SAR',
         payment_method: paymentMethod,
-        payment_status: 'completed', // Mock - would be 'pending' until payment confirmed
+        payment_status: 'completed',
         is_anonymous: isAnonymous,
         message: message || null,
         allocated_amount: 0,
@@ -94,16 +103,19 @@ export default function DonatePage() {
     }
   };
 
+  const progressPercentage = Math.min((CHARITY_STATS.totalRaised / CHARITY_STATS.goal) * 100, 100);
+
   if (isComplete) {
     return (
       <MainLayout>
         <div className="container max-w-2xl py-16 px-4">
-          <Card className="text-center">
-            <CardContent className="pt-12 pb-12">
-              <div className="mx-auto w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mb-6">
-                <Check className="h-10 w-10 text-green-600" />
+          <Card className="text-center border-2 border-primary/20 overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5 pointer-events-none" />
+            <CardContent className="pt-12 pb-12 relative">
+              <div className="mx-auto w-24 h-24 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center mb-6 shadow-lg">
+                <Check className="h-12 w-12 text-white" />
               </div>
-              <h1 className={`text-3xl font-bold mb-4 ${isRTL ? 'font-arabic' : ''}`}>
+              <h1 className={cn('text-3xl font-bold mb-4 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent', isRTL && 'font-arabic')}>
                 {isRTL ? 'جزاك الله خيراً!' : 'Jazak Allah Khair!'}
               </h1>
               <p className="text-muted-foreground text-lg mb-2">
@@ -117,7 +129,8 @@ export default function DonatePage() {
                   : 'Your contribution will help those in need perform Hajj and Umrah'}
               </p>
               <div className="flex gap-4 justify-center">
-                <Button onClick={() => setIsComplete(false)}>
+                <Button onClick={() => setIsComplete(false)} className="bg-gradient-to-r from-primary to-secondary">
+                  <Heart className="h-4 w-4 me-2" />
                   {isRTL ? 'تبرع مرة أخرى' : 'Donate Again'}
                 </Button>
                 <Button variant="outline" asChild>
@@ -133,28 +146,92 @@ export default function DonatePage() {
 
   return (
     <MainLayout>
-      <div className="container max-w-4xl py-12 px-4">
-        {/* Header */}
-        <div className="text-center mb-10">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 text-primary mb-4">
-            <Heart className="h-8 w-8" />
+      <div className="container max-w-6xl py-8 md:py-12 px-4">
+        {/* Hero Section */}
+        <div className="text-center mb-8 md:mb-12">
+          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-primary to-secondary text-white mb-6 shadow-lg">
+            <Moon className="h-10 w-10" />
           </div>
-          <h1 className={`text-3xl md:text-4xl font-bold mb-3 ${isRTL ? 'font-arabic' : ''}`}>
-            {isRTL ? 'تبرع لصندوق الحج والعمرة' : 'Donate to Hajj & Umrah Fund'}
+          <h1 className={cn('text-3xl md:text-4xl font-bold mb-4 bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent', isRTL && 'font-arabic')}>
+            {isRTL ? 'صدقة جارية' : 'Sadaqah Jariyah'}
           </h1>
-          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+          <p className={cn('text-muted-foreground text-lg max-w-2xl mx-auto leading-relaxed', isRTL && 'font-arabic')}>
             {isRTL 
               ? 'ساهم في مساعدة المحتاجين على أداء فريضة الحج والعمرة. تبرعك سيُحدث فرقاً كبيراً في حياتهم'
               : 'Help those in need fulfill their religious obligation. Your donation will make a significant difference in their lives'}
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Stats Cards */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-8">
+          <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
+            <CardContent className="pt-4 md:pt-6 text-center">
+              <Heart className="h-6 w-6 md:h-8 md:w-8 mx-auto mb-2 text-primary" />
+              <p className="text-xl md:text-2xl font-bold text-primary">
+                {CHARITY_STATS.totalRaised.toLocaleString()}
+              </p>
+              <p className="text-xs md:text-sm text-muted-foreground">
+                {isRTL ? 'ر.س تم جمعها' : 'SAR Raised'}
+              </p>
+            </CardContent>
+          </Card>
+          <Card className="bg-gradient-to-br from-secondary/10 to-secondary/5 border-secondary/20">
+            <CardContent className="pt-4 md:pt-6 text-center">
+              <Users className="h-6 w-6 md:h-8 md:w-8 mx-auto mb-2 text-secondary" />
+              <p className="text-xl md:text-2xl font-bold text-secondary">
+                {CHARITY_STATS.beneficiariesHelped}
+              </p>
+              <p className="text-xs md:text-sm text-muted-foreground">
+                {isRTL ? 'مستفيد' : 'Helped'}
+              </p>
+            </CardContent>
+          </Card>
+          <Card className="bg-gradient-to-br from-accent/10 to-accent/5 border-accent/20">
+            <CardContent className="pt-4 md:pt-6 text-center">
+              <Star className="h-6 w-6 md:h-8 md:w-8 mx-auto mb-2 text-accent" />
+              <p className="text-xl md:text-2xl font-bold text-accent">
+                {CHARITY_STATS.activeRequests}
+              </p>
+              <p className="text-xs md:text-sm text-muted-foreground">
+                {isRTL ? 'طلب نشط' : 'Active Requests'}
+              </p>
+            </CardContent>
+          </Card>
+          <Card className="bg-gradient-to-br from-purple-500/10 to-purple-500/5 border-purple-500/20">
+            <CardContent className="pt-4 md:pt-6 text-center">
+              <Sparkles className="h-6 w-6 md:h-8 md:w-8 mx-auto mb-2 text-purple-500" />
+              <p className="text-xl md:text-2xl font-bold text-purple-500">
+                {progressPercentage.toFixed(0)}%
+              </p>
+              <p className="text-xs md:text-sm text-muted-foreground">
+                {isRTL ? 'من الهدف' : 'of Goal'}
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Progress Bar */}
+        <Card className="mb-8 border-2">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between mb-3">
+              <span className="font-medium">
+                {isRTL ? 'التقدم نحو الهدف' : 'Progress to Goal'}
+              </span>
+              <span className="text-sm text-muted-foreground">
+                {CHARITY_STATS.totalRaised.toLocaleString()} / {CHARITY_STATS.goal.toLocaleString()} {isRTL ? 'ر.س' : 'SAR'}
+              </span>
+            </div>
+            <Progress value={progressPercentage} className="h-3" />
+          </CardContent>
+        </Card>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
           {/* Donation Form */}
           <div className="lg:col-span-2">
-            <Card>
+            <Card className="border-2">
               <CardHeader>
-                <CardTitle className={isRTL ? 'font-arabic' : ''}>
+                <CardTitle className={cn('flex items-center gap-2', isRTL && 'font-arabic')}>
+                  <Gift className="h-5 w-5 text-primary" />
                   {isRTL ? 'مبلغ التبرع' : 'Donation Amount'}
                 </CardTitle>
                 <CardDescription>
@@ -163,12 +240,15 @@ export default function DonatePage() {
               </CardHeader>
               <CardContent className="space-y-6">
                 {/* Preset Amounts */}
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-3 gap-2 md:gap-3">
                   {PRESET_AMOUNTS.map((preset) => (
                     <Button
                       key={preset}
                       variant={amount === preset ? 'default' : 'outline'}
-                      className="h-14 text-lg font-semibold"
+                      className={cn(
+                        'h-12 md:h-14 text-base md:text-lg font-semibold transition-all',
+                        amount === preset && 'ring-2 ring-primary ring-offset-2'
+                      )}
                       onClick={() => handleAmountSelect(preset)}
                     >
                       {preset} {isRTL ? 'ر.س' : 'SAR'}
@@ -178,7 +258,7 @@ export default function DonatePage() {
 
                 {/* Custom Amount */}
                 <div className="space-y-2">
-                  <Label>{isRTL ? 'مبلغ مخصص' : 'Custom Amount'}</Label>
+                  <Label className="text-base">{isRTL ? 'مبلغ مخصص' : 'Custom Amount'}</Label>
                   <div className="relative">
                     <Input
                       type="number"
@@ -248,9 +328,10 @@ export default function DonatePage() {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                       <Label
                         htmlFor="card"
-                        className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-colors ${
-                          paymentMethod === 'card' ? 'border-primary bg-primary/5' : 'hover:bg-muted/50'
-                        }`}
+                        className={cn(
+                          'flex items-center gap-3 p-4 border-2 rounded-lg cursor-pointer transition-all',
+                          paymentMethod === 'card' ? 'border-primary bg-primary/5 ring-2 ring-primary ring-offset-2' : 'hover:bg-muted/50'
+                        )}
                       >
                         <RadioGroupItem value="card" id="card" />
                         <CreditCard className="h-5 w-5" />
@@ -258,9 +339,10 @@ export default function DonatePage() {
                       </Label>
                       <Label
                         htmlFor="bank"
-                        className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-colors ${
-                          paymentMethod === 'bank' ? 'border-primary bg-primary/5' : 'hover:bg-muted/50'
-                        }`}
+                        className={cn(
+                          'flex items-center gap-3 p-4 border-2 rounded-lg cursor-pointer transition-all',
+                          paymentMethod === 'bank' ? 'border-primary bg-primary/5 ring-2 ring-primary ring-offset-2' : 'hover:bg-muted/50'
+                        )}
                       >
                         <RadioGroupItem value="bank" id="bank" />
                         <Building2 className="h-5 w-5" />
@@ -268,9 +350,10 @@ export default function DonatePage() {
                       </Label>
                       <Label
                         htmlFor="wallet"
-                        className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-colors ${
-                          paymentMethod === 'wallet' ? 'border-primary bg-primary/5' : 'hover:bg-muted/50'
-                        }`}
+                        className={cn(
+                          'flex items-center gap-3 p-4 border-2 rounded-lg cursor-pointer transition-all',
+                          paymentMethod === 'wallet' ? 'border-primary bg-primary/5 ring-2 ring-primary ring-offset-2' : 'hover:bg-muted/50'
+                        )}
                       >
                         <RadioGroupItem value="wallet" id="wallet" />
                         <Wallet className="h-5 w-5" />
@@ -283,7 +366,7 @@ export default function DonatePage() {
                 {/* Submit Button */}
                 <Button 
                   size="lg" 
-                  className="w-full h-14 text-lg"
+                  className="w-full h-14 text-lg bg-gradient-to-r from-primary to-secondary hover:opacity-90 transition-opacity"
                   disabled={!amount || amount <= 0 || isSubmitting}
                   onClick={handleSubmit}
                 >
@@ -302,16 +385,16 @@ export default function DonatePage() {
 
           {/* Sidebar */}
           <div className="space-y-6">
-            <Card>
+            <Card className="border-2 bg-gradient-to-br from-primary/5 to-secondary/5">
               <CardHeader>
-                <CardTitle className={`text-lg ${isRTL ? 'font-arabic' : ''}`}>
-                  <Gift className="h-5 w-5 inline-block me-2" />
+                <CardTitle className={cn('text-lg flex items-center gap-2', isRTL && 'font-arabic')}>
+                  <Sparkles className="h-5 w-5 text-primary" />
                   {isRTL ? 'أثر تبرعك' : 'Your Impact'}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <div className="flex items-start gap-3 p-3 rounded-lg bg-background/60">
+                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                     <span className="text-primary font-bold text-sm">1</span>
                   </div>
                   <div>
@@ -323,9 +406,9 @@ export default function DonatePage() {
                     </p>
                   </div>
                 </div>
-                <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <span className="text-primary font-bold text-sm">2</span>
+                <div className="flex items-start gap-3 p-3 rounded-lg bg-background/60">
+                  <div className="w-10 h-10 rounded-full bg-secondary/10 flex items-center justify-center flex-shrink-0">
+                    <span className="text-secondary font-bold text-sm">2</span>
                   </div>
                   <div>
                     <p className="font-medium text-sm">
@@ -336,9 +419,9 @@ export default function DonatePage() {
                     </p>
                   </div>
                 </div>
-                <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <span className="text-primary font-bold text-sm">3</span>
+                <div className="flex items-start gap-3 p-3 rounded-lg bg-background/60">
+                  <div className="w-10 h-10 rounded-full bg-accent/10 flex items-center justify-center flex-shrink-0">
+                    <span className="text-accent font-bold text-sm">3</span>
                   </div>
                   <div>
                     <p className="font-medium text-sm">
@@ -352,8 +435,12 @@ export default function DonatePage() {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="border-2">
               <CardContent className="pt-6">
+                <div className="flex items-center gap-2 mb-3">
+                  <Heart className="h-4 w-4 text-primary" />
+                  <span className="font-medium text-sm">{isRTL ? 'وعد الشفافية' : 'Transparency Promise'}</span>
+                </div>
                 <p className="text-sm text-muted-foreground leading-relaxed">
                   {isRTL 
                     ? 'جميع التبرعات تُخصص لمساعدة المحتاجين على أداء فريضة الحج والعمرة. نضمن الشفافية الكاملة في توزيع التبرعات.'

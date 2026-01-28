@@ -4,7 +4,7 @@ import {
   UserPlus, UserMinus, CheckCircle, XCircle, CreditCard,
   Building2, UserCheck, AlertTriangle, Activity, Download
 } from 'lucide-react';
-import { MainLayout } from '@/components/layout';
+import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { useLanguage } from '@/lib/i18n';
 import { useAuditLogs } from '@/hooks/useAuditLogs';
 import { useAuth } from '@/lib/auth';
@@ -164,7 +164,7 @@ export default function AuditLogsPage() {
 
   if (!isSuperAdmin) {
     return (
-      <MainLayout>
+      <DashboardLayout>
         <div className="container py-8 px-4">
           <Alert variant="destructive">
             <AlertTriangle className="h-4 w-4" />
@@ -176,13 +176,13 @@ export default function AuditLogsPage() {
             </AlertDescription>
           </Alert>
         </div>
-      </MainLayout>
+      </DashboardLayout>
     );
   }
 
   return (
-    <MainLayout>
-      <div className="container py-8 px-4">
+    <DashboardLayout>
+      <div className="p-4 md:p-6">
         {/* Islamic Header */}
         <div className="text-center mb-6">
           <p className="text-xs text-muted-foreground font-arabic mb-2">
@@ -478,6 +478,6 @@ export default function AuditLogsPage() {
           </DialogContent>
         </Dialog>
       </div>
-    </MainLayout>
+    </DashboardLayout>
   );
 }

@@ -121,47 +121,96 @@
     --cream-dark: 160 25% 12%;
   }
 
-  /* Role-specific color themes */
+  /* Role-specific color themes - Distinct visual identities */
+  
+  /* Traveler: Emerald green - faith/spiritual journey theme */
   .theme-traveler {
+    --role-primary: 158 64% 28%;
+    --role-secondary: 158 45% 45%;
+    --role-accent: 160 50% 40%;
     --sidebar-primary: 158 64% 28%;
     --sidebar-primary-foreground: 45 30% 97%;
     --sidebar-accent: 158 45% 45%;
+    --sidebar-background: 158 15% 97%;
+    --sidebar-border: 158 20% 90%;
   }
 
+  .theme-traveler.dark, .dark .theme-traveler {
+    --sidebar-primary: 158 55% 45%;
+    --sidebar-background: 158 20% 10%;
+    --sidebar-border: 158 20% 20%;
+  }
+
+  /* Provider: Warm gold/amber - professional services theme */
   .theme-provider {
-    --sidebar-primary: 43 74% 49%;
-    --sidebar-primary-foreground: 160 40% 10%;
+    --role-primary: 38 92% 50%;
+    --role-secondary: 43 74% 49%;
+    --role-accent: 35 85% 55%;
+    --sidebar-primary: 38 92% 50%;
+    --sidebar-primary-foreground: 0 0% 10%;
     --sidebar-accent: 43 65% 55%;
-    --sidebar-background: 43 20% 96%;
+    --sidebar-background: 40 30% 97%;
+    --sidebar-border: 40 20% 88%;
   }
 
   .theme-provider.dark, .dark .theme-provider {
     --sidebar-primary: 43 65% 55%;
-    --sidebar-background: 43 20% 10%;
+    --sidebar-background: 40 20% 10%;
+    --sidebar-border: 40 20% 20%;
   }
 
+  /* Vendor: Corporate blue - business/agency theme */
   .theme-vendor {
-    --sidebar-primary: 220 70% 50%;
+    --role-primary: 217 91% 60%;
+    --role-secondary: 220 70% 50%;
+    --role-accent: 210 80% 55%;
+    --sidebar-primary: 217 91% 60%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 220 60% 60%;
-    --sidebar-background: 220 20% 96%;
+    --sidebar-background: 217 30% 97%;
+    --sidebar-border: 217 25% 90%;
   }
 
   .theme-vendor.dark, .dark .theme-vendor {
-    --sidebar-primary: 220 60% 60%;
-    --sidebar-background: 220 20% 10%;
+    --sidebar-primary: 217 80% 60%;
+    --sidebar-background: 217 30% 10%;
+    --sidebar-border: 217 25% 20%;
   }
 
+  /* Admin: Royal purple - authority/management theme */
   .theme-admin {
-    --sidebar-primary: 280 65% 50%;
+    --role-primary: 262 83% 58%;
+    --role-secondary: 280 65% 50%;
+    --role-accent: 270 70% 55%;
+    --sidebar-primary: 262 83% 58%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 280 55% 60%;
-    --sidebar-background: 280 15% 96%;
+    --sidebar-background: 262 20% 97%;
+    --sidebar-border: 262 20% 90%;
   }
 
   .theme-admin.dark, .dark .theme-admin {
-    --sidebar-primary: 280 55% 60%;
-    --sidebar-background: 280 15% 10%;
+    --sidebar-primary: 262 75% 60%;
+    --sidebar-background: 262 25% 10%;
+    --sidebar-border: 262 20% 20%;
+  }
+  
+  /* Super Admin: Deep red/crimson - elevated access theme */
+  .theme-super-admin {
+    --role-primary: 0 72% 51%;
+    --role-secondary: 350 80% 50%;
+    --role-accent: 10 80% 55%;
+    --sidebar-primary: 0 72% 51%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 350 70% 55%;
+    --sidebar-background: 0 20% 97%;
+    --sidebar-border: 0 20% 90%;
+  }
+
+  .theme-super-admin.dark, .dark .theme-super-admin {
+    --sidebar-primary: 0 65% 55%;
+    --sidebar-background: 0 25% 10%;
+    --sidebar-border: 0 20% 20%;
   }
 }
 
