@@ -1,6 +1,6 @@
 import { ReactNode } from 'react';
-import { DashboardSidebar } from './DashboardSidebar';
-import { Header } from './Header';
+import { EnhancedSidebar } from './EnhancedSidebar';
+import { EnhancedHeader } from './EnhancedHeader';
 import { MobileBottomNav } from './MobileBottomNav';
 import { useAuth } from '@/lib/auth';
 import { cn } from '@/lib/utils';
@@ -30,10 +30,10 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     <div className={cn('flex min-h-screen w-full bg-background', getThemeClass())}>
       {/* Desktop Sidebar - hidden on mobile and tablet */}
       <div className="hidden lg:block">
-        <DashboardSidebar />
+        <EnhancedSidebar />
       </div>
       <div className="flex-1 flex flex-col min-h-screen w-full">
-        <Header showNav={false} />
+        <EnhancedHeader showNav={false} />
         <main className="flex-1 overflow-auto pb-0 md:pb-0">
           {children}
         </main>

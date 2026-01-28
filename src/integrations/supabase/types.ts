@@ -405,6 +405,42 @@ export type Database = {
           },
         ]
       }
+      offline_sync_queue: {
+        Row: {
+          created_at: string | null
+          id: string
+          operation: string
+          payload: Json
+          record_id: string | null
+          synced: boolean | null
+          synced_at: string | null
+          table_name: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          operation: string
+          payload: Json
+          record_id?: string | null
+          synced?: boolean | null
+          synced_at?: string | null
+          table_name: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          operation?: string
+          payload?: Json
+          record_id?: string | null
+          synced?: boolean | null
+          synced_at?: string | null
+          table_name?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -921,6 +957,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_locations: {
+        Row: {
+          city: string | null
+          country_code: string | null
+          country_name: string | null
+          created_at: string | null
+          currency_code: string | null
+          id: string
+          last_updated: string | null
+          latitude: number | null
+          longitude: number | null
+          timezone: string | null
+          user_id: string
+        }
+        Insert: {
+          city?: string | null
+          country_code?: string | null
+          country_name?: string | null
+          created_at?: string | null
+          currency_code?: string | null
+          id?: string
+          last_updated?: string | null
+          latitude?: number | null
+          longitude?: number | null
+          timezone?: string | null
+          user_id: string
+        }
+        Update: {
+          city?: string | null
+          country_code?: string | null
+          country_name?: string | null
+          created_at?: string | null
+          currency_code?: string | null
+          id?: string
+          last_updated?: string | null
+          latitude?: number | null
+          longitude?: number | null
+          timezone?: string | null
+          user_id?: string
+        }
+        Relationships: []
       }
       user_roles: {
         Row: {
