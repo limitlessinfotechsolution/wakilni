@@ -191,17 +191,12 @@ export function EnhancedHeader({ showNav = true }: EnhancedHeaderProps) {
               </div>
               <div className="absolute -inset-1 rounded-xl bg-gradient-to-br from-primary/20 to-secondary/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10 blur-sm" />
             </div>
-            <div className="flex flex-col">
-              <span className={cn(
-                'text-xl font-bold text-foreground leading-none tracking-tight',
-                isRTL && 'font-arabic'
-              )}>
-                {t.brand}
-              </span>
-              <span className="text-[10px] text-muted-foreground hidden sm:block mt-0.5 font-medium">
-                {isRTL ? 'خدمات العمرة والحج' : 'Umrah & Hajj Services'}
-              </span>
-            </div>
+            <span className={cn(
+              'text-xl font-bold text-foreground leading-none tracking-tight',
+              isRTL && 'font-arabic'
+            )}>
+              {t.brand}
+            </span>
           </Link>
 
           {/* Desktop Navigation */}

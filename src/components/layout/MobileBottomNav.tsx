@@ -6,8 +6,8 @@ import {
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/lib/i18n';
 import { useAuth } from '@/lib/auth';
-import { useState, useCallback } from 'react';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { useState, useCallback, useRef } from 'react';
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from '@/components/ui/drawer';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
@@ -263,9 +263,9 @@ export function MobileBottomNav() {
             );
           })}
           
-          {/* More Button */}
-          <Sheet open={sheetOpen} onOpenChange={handleSheetToggle}>
-            <SheetTrigger asChild>
+          {/* More Button with Swipe Gesture Drawer */}
+          <Drawer open={sheetOpen} onOpenChange={handleSheetToggle}>
+            <DrawerTrigger asChild>
               <button
                 className={cn(
                   'flex flex-col items-center justify-center flex-1 h-full gap-0.5 transition-all duration-200 min-w-0 select-none',
@@ -290,25 +290,20 @@ export function MobileBottomNav() {
                   {isRTL ? 'المزيد' : 'More'}
                 </span>
               </button>
-            </SheetTrigger>
+            </DrawerTrigger>
             
-            <SheetContent 
-              side="bottom" 
-              className="h-auto max-h-[80vh] rounded-t-[28px] px-0 border-0 bg-background/98 backdrop-blur-2xl"
-            >
-              {/* Drag Handle */}
-              <div className="flex justify-center pt-3 pb-2">
-                <div className="w-10 h-1 bg-muted-foreground/25 rounded-full" />
-              </div>
+            <DrawerContent className="max-h-[85vh] bg-background/98 backdrop-blur-2xl border-0">
+              {/* Native Drag Handle */}
+              <div className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-muted-foreground/25 mt-4 mb-2" />
               
-              <SheetHeader className="px-6 pb-2">
+              <DrawerHeader className="px-6 pb-2">
                 <div className="flex items-center justify-between">
-                  <SheetTitle className={cn(
+                  <DrawerTitle className={cn(
                     'text-sm font-semibold uppercase tracking-wider text-muted-foreground',
                     isRTL && 'font-arabic'
                   )}>
                     {isRTL ? 'القائمة' : 'Navigation'}
-                  </SheetTitle>
+                  </DrawerTitle>
                   <button 
                     onClick={() => handleSheetToggle(false)}
                     className="p-2 rounded-full hover:bg-muted/60 transition-colors active:scale-90"
@@ -316,7 +311,7 @@ export function MobileBottomNav() {
                     <X className="h-4 w-4 text-muted-foreground" />
                   </button>
                 </div>
-              </SheetHeader>
+              </DrawerHeader>
               
               {/* User Profile Card */}
               <div className="mx-5 mb-5 p-4 rounded-2xl bg-gradient-to-br from-muted/60 to-muted/30 border border-border/30">
@@ -343,8 +338,8 @@ export function MobileBottomNav() {
                 </div>
               </div>
               
-              {/* Navigation Sections */}
-              <div className="px-5 space-y-5 pb-6 overflow-y-auto max-h-[45vh]">
+              {/* Navigation Sections with smooth scroll */}
+              <div className="px-5 space-y-5 pb-8 overflow-y-auto max-h-[50vh] overscroll-contain">
                 {moreSections.map((section, idx) => (
                   <div key={section.title}>
                     {idx > 0 && <Separator className="mb-4 bg-border/40" />}
@@ -388,8 +383,8 @@ export function MobileBottomNav() {
                   </div>
                 ))}
               </div>
-            </SheetContent>
-          </Sheet>
+            </DrawerContent>
+          </Drawer>
         </div>
       </nav>
       
