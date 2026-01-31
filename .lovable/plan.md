@@ -1,247 +1,212 @@
 
-# Phase 3 Final Implementation: All Remaining Batches
-## Ritual Interface, Traveler Pages, Profile Settings, AuditLogs Enhancement
+# Phase 3 Completion: Missing Features Implementation
+## Completing DonatePage Migration, ProfileSettingsPage Enhancement, and Additional Feature Modules
 
 ---
 
-## Summary
+## Executive Summary
 
-This implementation completes Phase 3 by addressing:
-- **Batch 5**: New Ritual Interface Components (GPSIndicator, StepProgressBar, AudioWaveform)
-- **Batch 6**: Complete RitualEventRecorder Redesign (Full-screen immersive mode)
-- **Batch 7**: Traveler/Public Pages Migration (ServicesPage, DonatePage)
-- **Batch 8**: AuditLogsPage Enhancement (Timeline view toggle, JSON diff viewer)
-- **Batch 9**: ProfileSettingsPage Enhancement (GlassCard styling, animated toggles)
-- **Batch 10**: ConfirmDialog Component Creation
+After thorough exploration of the codebase, I've identified the following missing features from the Phase 3 redesign plan:
 
----
-
-## Batch 5: New Ritual Interface Components
-
-### 5.1 GPSIndicator.tsx (New Component)
-**Location**: `src/components/rituals/GPSIndicator.tsx`
-
-**Features**:
-- Visual signal strength bars (1-5 bars based on accuracy)
-- Real-time GPS accuracy display in meters
-- Color-coded status (Strong/Moderate/Weak/No Signal)
-- "Near Haram" detection badge
-- Pulsing animation when acquiring location
-- RTL support
-
-**Visual Design**:
-```text
-┌─────────────────────────────────┐
-│  GPS Signal: ████████ Strong    │
-│  Accuracy: 5m                   │
-│  📍 Near Masjid al-Haram        │
-└─────────────────────────────────┘
-```
-
-### 5.2 StepProgressBar.tsx (New Component)
-**Location**: `src/components/rituals/StepProgressBar.tsx`
-
-**Features**:
-- Horizontal progress with step icons
-- Current step highlight with glow effect
-- Completed steps with checkmarks
-- Swipe navigation between steps (mobile)
-- Percentage display
-- Step count (e.g., "3 of 9")
-
-### 5.3 AudioWaveform.tsx (New Component)
-**Location**: `src/components/rituals/AudioWaveform.tsx`
-
-**Features**:
-- Real-time waveform visualization (simulated bars)
-- Recording duration timer
-- Play/Pause controls for playback
-- Recording state indicator (pulsing red dot)
-- Volume level indicator
+1. **DonatePage.tsx** - Still uses `MainLayout`, needs conditional `DashboardLayout` migration
+2. **ProfileSettingsPage.tsx** - Missing GlassCard styling and security section
+3. **Feature Modules** - Missing `locations`, `reports`, and `services` modules
+4. **Test Coverage** - Missing tests for hooks, components, and role-based routing
+5. **Module Index Files** - Need to add new module exports
 
 ---
 
-## Batch 6: RitualEventRecorder Complete Redesign
+## Batch 1: DonatePage Migration
 
 ### Current State
-- Collapsible card-based UI
-- Basic step list
-- Simple progress bar
-- Standard form layout
+- Uses `MainLayout` for all users
+- No conditional layout based on authentication
+- Missing animated donation counter
+- Missing Zakat calculator tab
+- Missing recurring donation toggle
 
-### New Immersive Design
+### Changes Required
 
-**Features**:
-- Full-screen toggle mode
-- Large GPS indicator at top
-- Photo/Video capture area with camera access
-- Audio recording with waveform visualization
-- Swipeable step navigation
-- Haptic feedback on step completion
-- Offline mode indicator
-- SuccessCelebration on ritual complete
+**File**: `src/pages/donate/DonatePage.tsx`
 
-**New UI Structure**:
-```text
-┌─────────────────────────────────┐
-│  [Fullscreen Toggle]  [Exit]    │
-├─────────────────────────────────┤
-│  GPS: ████████ Strong | 5m      │
-│  📍 Masjid al-Haram             │
-├─────────────────────────────────┤
-│                                 │
-│     ┌─────────────────────┐     │
-│     │   PHOTO CAPTURE     │     │
-│     │   (Camera View)     │     │
-│     │                     │     │
-│     │    [📷] [🎥] [🎤]   │     │
-│     └─────────────────────┘     │
-│                                 │
-├─────────────────────────────────┤
-│  Step 3 of 9: Maqam Ibrahim     │
-│  ▰▰▰▱▱▱▱▱▱  33%                │
-│  ◀ Swipe to navigate ▶         │
-├─────────────────────────────────┤
-│  Dua Transcript:                │
-│  ┌─────────────────────────┐    │
-│  │ اللهم اغفر لـ [محمد]...     │    │
-│  └─────────────────────────┘    │
-│  ✅ Beneficiary Name Detected   │
-├─────────────────────────────────┤
-│  [     RECORD THIS STEP     ]   │
-│  Offline: 2 pending sync        │
-└─────────────────────────────────┘
-```
-
----
-
-## Batch 7: Traveler/Public Pages Migration
-
-### 7.1 ServicesPage.tsx
-**Current**: Uses `MainLayout`
-**Changes**:
-- Migrate to conditional layout (DashboardLayout for authenticated, MainLayout for guests)
-- Add SwipeableTabs for service type filtering on mobile
-- Add FloatingActionButton for filter access on mobile
-- Enhance service cards with GlassCard hover effects
-- Add wishlist heart button with animation
-- Add "Recently Viewed" section for authenticated users
-
-### 7.2 DonatePage.tsx
-**Current**: Uses `MainLayout`
-**Changes**:
-- Migrate to conditional layout (DashboardLayout for authenticated)
-- Add animated donation counter using counter animation
-- Add milestone celebration at goal percentages
-- Add Zakat calculator tab
-- Add recurring donation toggle
-- Wrap stats in GlassCard styling
-- Add share donation receipt button
-
----
-
-## Batch 8: AuditLogsPage Enhancement
-
-### Current State
-- DashboardLayout with table view
-- Basic filters and search
-- Details dialog
-
-### Enhancements
-- Add timeline view toggle (table vs vertical timeline)
-- Add JSON diff viewer in details modal
-- Add quick filter chips (Today, This Week, Critical Actions)
-- Add export logs button (Download CSV)
-- Add real-time log stream indicator
-- Color-coded timeline entries with icons
-- GlassCard styling for filter panel
-
----
-
-## Batch 9: ProfileSettingsPage Enhancement
-
-### Current State
-- DashboardLayout with tabs
-- Standard Card components
-- Basic form layout
-
-### Enhancements
-- Wrap each section in GlassCard styling
-- Add avatar camera overlay animation on hover
-- Add animated toggle switches with haptic feedback
-- Add push notification test button with vibration
-- Add offline sync status widget showing:
-  - Online/Offline indicator
-  - Last sync time
-  - Pending operations count
-  - Manual sync button
-- Add account security section:
-  - Active sessions list
-  - Password change option
-  - Two-factor setup placeholder
-- Add data export button (GDPR compliance)
-
----
-
-## Batch 10: ConfirmDialog Component
-
-### Location
-`src/components/feedback/ConfirmDialog.tsx`
-
-### Features
-- Illustration support (warning, danger, success icons)
-- Haptic feedback on action
-- Destructive action styling (red for dangerous actions)
-- Cancel and Confirm buttons
-- Loading state for async actions
-- RTL support
-- Accessible with keyboard navigation
-
-### Usage
+1. **Conditional Layout Pattern**:
 ```typescript
-<ConfirmDialog
-  open={isOpen}
-  onOpenChange={setIsOpen}
-  title="Delete Account?"
-  description="This action cannot be undone."
-  variant="destructive"
-  onConfirm={handleDelete}
-  confirmLabel="Delete"
-/>
+import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { MainLayout } from '@/components/layout';
+
+// Inside component
+const Layout = user ? DashboardLayout : MainLayout;
+return <Layout>...</Layout>;
 ```
+
+2. **Add Animated Counter**:
+   - Apply `animate-counter-up` class to stats
+   - Add visual counter increment animation
+
+3. **Add Zakat Calculator Tab**:
+   - New tab in the form section
+   - Calculate Zakat based on wealth input (2.5%)
+   - Auto-fill donation amount from calculation
+
+4. **Add Recurring Donation Toggle**:
+   - Switch component for monthly recurring
+   - Update form state to include `is_recurring`
+
+5. **GlassCard Styling**:
+   - Wrap stats in GlassCard components
+   - Add hover effects and glow
+
+---
+
+## Batch 2: ProfileSettingsPage Enhancement
+
+### Current State
+- Uses `DashboardLayout` (correct)
+- Uses standard `Card` components
+- Missing GlassCard styling
+- Missing security section with session management
+- Missing data export button
+
+### Changes Required
+
+**File**: `src/pages/settings/ProfileSettingsPage.tsx`
+
+1. **GlassCard Styling**:
+   - Import and wrap all sections in `GlassCard`
+   - Add `hoverable` and `glow` props
+
+2. **Avatar Camera Overlay Animation**:
+   - Add hover scale effect on avatar container
+   - Add gradient overlay on hover
+
+3. **Add Security Tab**:
+   - New tab alongside Profile, Notifications, Preferences
+   - Include:
+     - Password change section
+     - Active sessions list (mock data)
+     - Two-factor authentication toggle (placeholder)
+     - Account deletion option
+
+4. **Add Data Export Button**:
+   - GDPR compliance
+   - Button to request data export
+   - Toast confirmation
+
+5. **Animated Toggle Switches**:
+   - Add haptic feedback on toggle
+   - Visual feedback animation
+
+---
+
+## Batch 3: New Feature Modules
+
+### 3.1 Locations Module
+**File**: `src/modules/locations/index.ts`
+
+```typescript
+export { useGeolocation } from '@/hooks/useGeolocation';
+export { useRitualLocation } from '@/hooks/useRitualLocation';
+export { HOLY_SITES } from '@/config/constants';
+```
+
+### 3.2 Reports Module
+**File**: `src/modules/reports/index.ts`
+
+```typescript
+export { useAdminStats } from '@/hooks/useAdminStats';
+export { useAuditLogs } from '@/hooks/useAuditLogs';
+export * as AuditAPI from '@/api/services/audit.service';
+```
+
+### 3.3 Services Module
+**File**: `src/modules/services/index.ts`
+
+```typescript
+export { useServices } from '@/hooks/useServices';
+export { useProviderServices } from '@/hooks/useProviderServices';
+export * as ServicesAPI from '@/api/services/services.service';
+export { SERVICE_TYPES, SERVICE_TYPE_LABELS } from '@/config/constants';
+```
+
+### 3.4 Providers Module
+**File**: `src/modules/providers/index.ts`
+
+```typescript
+export { useProvider } from '@/hooks/useProvider';
+export { usePublicProvider } from '@/hooks/usePublicProvider';
+export { useProviderAvailability } from '@/hooks/useProviderAvailability';
+export { usePilgrimCertification } from '@/hooks/usePilgrimCertification';
+export * as ProvidersAPI from '@/api/services/providers.service';
+```
+
+### 3.5 Update Module Index
+**File**: `src/modules/index.ts`
+
+Add exports for new modules.
+
+---
+
+## Batch 4: Test Coverage Expansion
+
+### 4.1 Hooks Tests
+**File**: `src/tests/hooks/auth.test.ts`
+- Test `hasPermission` function
+- Test role hierarchy
+- Test `canAccessRoute` helper
+
+### 4.2 Components Tests
+**File**: `src/tests/components/feedback.test.ts`
+- Test ConfirmDialog behavior
+- Test EmptyState rendering
+- Test LoadingState variants
+
+### 4.3 Role-Based Routing Tests
+**File**: `src/tests/routing/protected-routes.test.ts`
+- Test ProtectedRoute component
+- Test role-based redirects
+- Test unauthorized access handling
+
+### 4.4 API Services Tests
+**File**: `src/tests/api/providers.test.ts`
+- Test provider CRUD operations
+- Test availability management
+- Test KYC status updates
 
 ---
 
 ## Files to Create
 
 ```text
-src/components/
-  rituals/
-    GPSIndicator.tsx          # GPS signal strength display
-    StepProgressBar.tsx       # Enhanced step progress
-    AudioWaveform.tsx         # Audio recording visualization
-  feedback/
-    ConfirmDialog.tsx         # Confirmation dialog with illustrations
+src/modules/
+  locations/
+    index.ts
+  reports/
+    index.ts
+  services/
+    index.ts
+  providers/
+    index.ts
+
+src/tests/
+  hooks/
+    auth.test.ts
+  components/
+    feedback.test.ts
+  routing/
+    protected-routes.test.ts
+  api/
+    providers.test.ts
 ```
 
 ## Files to Modify
 
 ```text
-Ritual Interface:
-  - src/components/rituals/RitualEventRecorder.tsx (complete redesign)
+Pages:
+  - src/pages/donate/DonatePage.tsx (conditional layout, GlassCard, Zakat calculator)
+  - src/pages/settings/ProfileSettingsPage.tsx (GlassCard, security tab, data export)
 
-Traveler Pages:
-  - src/pages/services/ServicesPage.tsx (conditional layout + enhancements)
-  - src/pages/donate/DonatePage.tsx (conditional layout + enhancements)
-
-Super Admin:
-  - src/pages/super-admin/AuditLogsPage.tsx (timeline view + export)
-
-Settings:
-  - src/pages/settings/ProfileSettingsPage.tsx (GlassCard + security section)
-
-Index Updates:
-  - src/components/feedback/index.ts (add ConfirmDialog export)
+Modules:
+  - src/modules/index.ts (add new module exports)
 ```
 
 ---
@@ -250,100 +215,108 @@ Index Updates:
 
 ### Conditional Layout Pattern
 ```typescript
-// For pages that can be public or authenticated
-const { user } = useAuth();
-const Layout = user ? DashboardLayout : MainLayout;
+export default function DonatePage() {
+  const { user } = useAuth();
+  const Layout = user ? DashboardLayout : MainLayout;
 
-return (
-  <Layout>
-    {/* page content */}
-  </Layout>
-);
+  return (
+    <Layout>
+      {/* content */}
+    </Layout>
+  );
+}
 ```
 
-### GlassCard Wrapping Pattern
+### Zakat Calculator Component
 ```typescript
-import { GlassCard, GlassCardHeader, GlassCardContent } from '@/components/cards/GlassCard';
+const ZakatCalculator = () => {
+  const [wealth, setWealth] = useState(0);
+  const zakatAmount = wealth * 0.025; // 2.5% Zakat
 
-<GlassCard hoverable glow>
-  <GlassCardHeader>
-    <CardTitle>Section Title</CardTitle>
-  </GlassCardHeader>
-  <GlassCardContent>
-    {/* content */}
-  </GlassCardContent>
-</GlassCard>
-```
-
-### Haptic Feedback Integration
-```typescript
-import { useHaptics } from '@/hooks/useHaptics';
-
-const { triggerHaptic } = useHaptics();
-
-const handleAction = () => {
-  triggerHaptic('success');
-  // action logic
+  return (
+    <GlassCard>
+      <Input 
+        type="number" 
+        value={wealth} 
+        onChange={(e) => setWealth(Number(e.target.value))} 
+        placeholder="Enter total wealth..."
+      />
+      <p>Zakat Due: {zakatAmount.toLocaleString()} SAR</p>
+      <Button onClick={() => setAmount(zakatAmount)}>
+        Use This Amount
+      </Button>
+    </GlassCard>
+  );
 };
 ```
 
----
-
-## Animation Additions
-
-Already added in previous batch:
-- `counter-up` - Stats counter animation
-- `gps-pulse` - GPS indicator pulse
-- `signal-bar` - Signal bar fill animation
-- `waveform` - Audio waveform bars
-- `recording-pulse` - Recording indicator
-- `live-pulse` - Real-time indicator
+### Security Section Structure
+```typescript
+<TabsContent value="security">
+  <GlassCard>
+    <CardTitle>Change Password</CardTitle>
+    {/* Password change form */}
+  </GlassCard>
+  
+  <GlassCard>
+    <CardTitle>Active Sessions</CardTitle>
+    {/* List of active sessions with device info */}
+    {/* "Sign out all" button */}
+  </GlassCard>
+  
+  <GlassCard>
+    <CardTitle>Two-Factor Authentication</CardTitle>
+    {/* 2FA setup placeholder */}
+  </GlassCard>
+  
+  <GlassCard variant="destructive">
+    <CardTitle>Delete Account</CardTitle>
+    {/* Account deletion with ConfirmDialog */}
+  </GlassCard>
+</TabsContent>
+```
 
 ---
 
 ## Implementation Order
 
-### Step 1: Create New Ritual Components
-1. GPSIndicator.tsx
-2. StepProgressBar.tsx
-3. AudioWaveform.tsx
+### Step 1: Create New Feature Modules
+1. Create `src/modules/locations/index.ts`
+2. Create `src/modules/reports/index.ts`
+3. Create `src/modules/services/index.ts`
+4. Create `src/modules/providers/index.ts`
+5. Update `src/modules/index.ts`
 
-### Step 2: Redesign RitualEventRecorder
-- Integrate new components
-- Add full-screen mode
-- Add swipe navigation
-- Add offline indicator
+### Step 2: Migrate DonatePage
+1. Add conditional layout pattern
+2. Add GlassCard styling to stats
+3. Add Zakat calculator tab
+4. Add recurring donation toggle
+5. Add animated counter
 
-### Step 3: Create ConfirmDialog
-- Build reusable confirmation component
-- Add to feedback index
+### Step 3: Enhance ProfileSettingsPage
+1. Add Security tab
+2. Wrap sections in GlassCard
+3. Add animated toggle switches
+4. Add data export button
+5. Add session management section
 
-### Step 4: Enhance AuditLogsPage
-- Add timeline view toggle
-- Add JSON diff viewer
-- Add export functionality
-
-### Step 5: Migrate Traveler Pages
-- ServicesPage conditional layout
-- DonatePage conditional layout
-- Add enhanced features
-
-### Step 6: Enhance ProfileSettingsPage
-- GlassCard styling
-- Security section
-- Sync status widget
+### Step 4: Add Test Skeletons
+1. Create hooks tests
+2. Create component tests
+3. Create routing tests
+4. Create API tests
 
 ---
 
 ## Success Criteria
 
-- All new ritual components created and integrated
-- RitualEventRecorder has full-screen immersive mode
-- ServicesPage uses conditional DashboardLayout
-- DonatePage uses conditional DashboardLayout
-- AuditLogsPage has timeline view option
-- ProfileSettingsPage has GlassCard sections
-- ConfirmDialog component available for dangerous actions
+- DonatePage uses conditional DashboardLayout/MainLayout
+- DonatePage has Zakat calculator tab
+- DonatePage has recurring donation toggle
+- ProfileSettingsPage has Security tab with session management
+- ProfileSettingsPage uses GlassCard throughout
+- All new feature modules created and exported
+- Test skeletons for hooks, components, routing, and API
 - All components support RTL
-- Haptic feedback on all interactive elements
 - Premium animations applied throughout
