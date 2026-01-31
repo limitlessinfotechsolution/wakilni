@@ -2,11 +2,16 @@ import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { User, Camera, Bell, Globe, Shield, Loader2, Smartphone, Mail, MessageSquare, Calendar, CheckCircle2, AlertTriangle, Wifi, WifiOff } from 'lucide-react';
+import { 
+  User, Camera, Bell, Globe, Shield, Loader2, Smartphone, Mail, MessageSquare, 
+  Calendar, CheckCircle2, AlertTriangle, Wifi, WifiOff, Lock, Monitor, Trash2, 
+  Download, Key, LogOut 
+} from 'lucide-react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { GlassCard, GlassCardContent, GlassCardHeader } from '@/components/cards/GlassCard';
+import { CardDescription, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -20,8 +25,10 @@ import { useLanguage } from '@/lib/i18n';
 import { useAuth } from '@/lib/auth';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
 import { useOfflineSync } from '@/hooks/useOfflineSync';
+import { useHaptics } from '@/hooks/useHaptics';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
+import { ConfirmDialog } from '@/components/feedback';
 
 const profileSchema = z.object({
   full_name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -31,13 +38,22 @@ const profileSchema = z.object({
 
 type ProfileFormData = z.infer<typeof profileSchema>;
 
+const passwordSchema = z.object({
+  currentPassword: z.string().min(8, 'Password must be at least 8 characters'),
+  newPassword: z.string().min(8, 'Password must be at least 8 characters'),
+  confirmPassword: z.string().min(8, 'Password must be at least 8 characters'),
+}).refine((data) => data.newPassword === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
+});
+
+type PasswordFormData = z.infer<typeof passwordSchema>;
+
 interface NotificationPreferences {
-  // Email notifications
   email_bookings: boolean;
   email_kyc: boolean;
   email_messages: boolean;
   email_marketing: boolean;
-  // Push notifications
   push_bookings: boolean;
   push_kyc: boolean;
   push_messages: boolean;
@@ -45,10 +61,18 @@ interface NotificationPreferences {
   push_system: boolean;
 }
 
+// Mock active sessions data
+const MOCK_SESSIONS = [
+  { id: '1', device: 'Chrome on Windows', location: 'Riyadh, SA', lastActive: 'Now', current: true },
+  { id: '2', device: 'Safari on iPhone', location: 'Jeddah, SA', lastActive: '2 hours ago', current: false },
+  { id: '3', device: 'Firefox on macOS', location: 'Dubai, AE', lastActive: '1 day ago', current: false },
+];
+
 export default function ProfileSettingsPage() {
   const { t, isRTL, language, setLanguage } = useLanguage();
-  const { user, profile, refreshProfile } = useAuth();
+  const { user, profile, refreshProfile, signOut } = useAuth();
   const { toast } = useToast();
+  const haptics = useHaptics();
   const { isSupported: pushSupported, isSubscribed, permission, subscribe, requestPermission } = usePushNotifications();
   const { isOnline, isSyncing, pendingCount, syncAll, lastSyncTime } = useOfflineSync();
   
@@ -56,6 +80,10 @@ export default function ProfileSettingsPage() {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [isSavingNotifications, setIsSavingNotifications] = useState(false);
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [isExportingData, setIsExportingData] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [sessions, setSessions] = useState(MOCK_SESSIONS);
   const [notificationPrefs, setNotificationPrefs] = useState<NotificationPreferences>({
     email_bookings: true,
     email_kyc: true,
@@ -77,6 +105,15 @@ export default function ProfileSettingsPage() {
     },
   });
 
+  const passwordForm = useForm<PasswordFormData>({
+    resolver: zodResolver(passwordSchema),
+    defaultValues: {
+      currentPassword: '',
+      newPassword: '',
+      confirmPassword: '',
+    },
+  });
+
   useEffect(() => {
     if (profile) {
       form.reset({
@@ -88,7 +125,6 @@ export default function ProfileSettingsPage() {
     }
   }, [profile, form]);
 
-  // Enable push notifications
   const handleEnablePush = async () => {
     if (!pushSupported) {
       toast({
@@ -101,6 +137,7 @@ export default function ProfileSettingsPage() {
 
     const success = await subscribe();
     if (success) {
+      haptics.success();
       toast({
         title: isRTL ? 'تم التفعيل' : 'Enabled',
         description: isRTL ? 'ستتلقى الآن إشعارات فورية' : 'You will now receive push notifications.',
@@ -110,13 +147,18 @@ export default function ProfileSettingsPage() {
 
   const handleSaveNotificationPrefs = async () => {
     setIsSavingNotifications(true);
-    // In a real app, save to user preferences in database
     await new Promise(resolve => setTimeout(resolve, 500));
+    haptics.success();
     toast({
       title: isRTL ? 'تم الحفظ' : 'Saved',
       description: isRTL ? 'تم حفظ تفضيلات الإشعارات' : 'Notification preferences saved.',
     });
     setIsSavingNotifications(false);
+  };
+
+  const handleToggleWithHaptic = (checked: boolean, key: keyof NotificationPreferences) => {
+    haptics.light();
+    setNotificationPrefs(prev => ({ ...prev, [key]: checked }));
   };
 
   const onSubmit = async (data: ProfileFormData) => {
@@ -137,12 +179,14 @@ export default function ProfileSettingsPage() {
       if (error) throw error;
 
       await refreshProfile();
+      haptics.success();
       toast({
         title: isRTL ? 'تم الحفظ' : 'Saved',
         description: isRTL ? 'تم تحديث ملفك الشخصي بنجاح' : 'Your profile has been updated successfully.',
       });
     } catch (error) {
       console.error('Error updating profile:', error);
+      haptics.error();
       toast({
         title: isRTL ? 'خطأ' : 'Error',
         description: isRTL ? 'فشل في تحديث الملف الشخصي' : 'Failed to update profile.',
@@ -153,13 +197,73 @@ export default function ProfileSettingsPage() {
     }
   };
 
+  const handlePasswordChange = async (data: PasswordFormData) => {
+    setIsChangingPassword(true);
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: data.newPassword,
+      });
+
+      if (error) throw error;
+
+      haptics.success();
+      toast({
+        title: isRTL ? 'تم تغيير كلمة المرور' : 'Password Changed',
+        description: isRTL ? 'تم تحديث كلمة مرورك بنجاح' : 'Your password has been updated successfully.',
+      });
+      passwordForm.reset();
+    } catch (error) {
+      console.error('Error changing password:', error);
+      haptics.error();
+      toast({
+        title: isRTL ? 'خطأ' : 'Error',
+        description: isRTL ? 'فشل في تغيير كلمة المرور' : 'Failed to change password.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsChangingPassword(false);
+    }
+  };
+
+  const handleExportData = async () => {
+    setIsExportingData(true);
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    haptics.success();
+    toast({
+      title: isRTL ? 'طلب تصدير البيانات' : 'Data Export Requested',
+      description: isRTL 
+        ? 'ستتلقى رسالة بريد إلكتروني تحتوي على رابط تنزيل بياناتك خلال 24 ساعة'
+        : 'You will receive an email with a download link for your data within 24 hours.',
+    });
+    setIsExportingData(false);
+  };
+
+  const handleSignOutAllSessions = async () => {
+    haptics.warning();
+    setSessions([sessions[0]]);
+    toast({
+      title: isRTL ? 'تم تسجيل الخروج' : 'Signed Out',
+      description: isRTL ? 'تم تسجيل الخروج من جميع الأجهزة الأخرى' : 'Signed out from all other devices.',
+    });
+  };
+
+  const handleDeleteAccount = async () => {
+    haptics.error();
+    toast({
+      title: isRTL ? 'طلب حذف الحساب' : 'Account Deletion Requested',
+      description: isRTL 
+        ? 'سيتم حذف حسابك خلال 30 يوماً. يمكنك إلغاء هذا الطلب بتسجيل الدخول مرة أخرى.'
+        : 'Your account will be deleted within 30 days. You can cancel this by logging in again.',
+    });
+    setShowDeleteDialog(false);
+  };
+
   const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file || !user) return;
 
     setIsUploadingAvatar(true);
     try {
-      // Upload to Supabase Storage
       const fileExt = file.name.split('.').pop();
       const fileName = `${user.id}-${Date.now()}.${fileExt}`;
       const filePath = `avatars/${fileName}`;
@@ -169,7 +273,6 @@ export default function ProfileSettingsPage() {
         .upload(filePath, file);
 
       if (uploadError) {
-        // If bucket doesn't exist, just store a placeholder
         console.error('Upload error:', uploadError);
         toast({
           title: isRTL ? 'تنبيه' : 'Notice',
@@ -184,7 +287,6 @@ export default function ProfileSettingsPage() {
 
       const publicUrl = urlData.publicUrl;
 
-      // Update profile
       await supabase
         .from('profiles')
         .update({ avatar_url: publicUrl })
@@ -192,6 +294,7 @@ export default function ProfileSettingsPage() {
 
       setAvatarUrl(publicUrl);
       await refreshProfile();
+      haptics.success();
 
       toast({
         title: isRTL ? 'تم التحميل' : 'Uploaded',
@@ -232,23 +335,29 @@ export default function ProfileSettingsPage() {
         </div>
 
         <Tabs defaultValue="profile" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="profile" className="flex items-center gap-2">
               <User className="h-4 w-4" />
-              <span className={cn(isRTL && 'font-arabic')}>
-                {isRTL ? 'الملف الشخصي' : 'Profile'}
+              <span className={cn('hidden sm:inline', isRTL && 'font-arabic')}>
+                {isRTL ? 'الملف' : 'Profile'}
               </span>
             </TabsTrigger>
             <TabsTrigger value="notifications" className="flex items-center gap-2">
               <Bell className="h-4 w-4" />
-              <span className={cn(isRTL && 'font-arabic')}>
+              <span className={cn('hidden sm:inline', isRTL && 'font-arabic')}>
                 {isRTL ? 'الإشعارات' : 'Notifications'}
               </span>
             </TabsTrigger>
             <TabsTrigger value="preferences" className="flex items-center gap-2">
               <Globe className="h-4 w-4" />
-              <span className={cn(isRTL && 'font-arabic')}>
+              <span className={cn('hidden sm:inline', isRTL && 'font-arabic')}>
                 {isRTL ? 'التفضيلات' : 'Preferences'}
+              </span>
+            </TabsTrigger>
+            <TabsTrigger value="security" className="flex items-center gap-2">
+              <Shield className="h-4 w-4" />
+              <span className={cn('hidden sm:inline', isRTL && 'font-arabic')}>
+                {isRTL ? 'الأمان' : 'Security'}
               </span>
             </TabsTrigger>
           </TabsList>
@@ -256,24 +365,27 @@ export default function ProfileSettingsPage() {
           {/* Profile Tab */}
           <TabsContent value="profile" className="space-y-6">
             {/* Avatar Section */}
-            <Card>
-              <CardHeader>
+            <GlassCard glow hoverable>
+              <GlassCardHeader>
                 <CardTitle className={cn(isRTL && 'font-arabic')}>
                   {isRTL ? 'صورة الملف الشخصي' : 'Profile Picture'}
                 </CardTitle>
                 <CardDescription>
                   {isRTL ? 'صورتك ستظهر للمستخدمين الآخرين' : 'Your photo will be visible to other users'}
                 </CardDescription>
-              </CardHeader>
-              <CardContent>
+              </GlassCardHeader>
+              <GlassCardContent>
                 <div className="flex items-center gap-6">
-                  <div className="relative">
-                    <Avatar className="h-24 w-24">
+                  <div className="relative group">
+                    <Avatar className="h-24 w-24 transition-transform group-hover:scale-105">
                       <AvatarImage src={avatarUrl || undefined} />
                       <AvatarFallback className="text-xl bg-primary text-primary-foreground">
                         {getInitials()}
                       </AvatarFallback>
                     </Avatar>
+                    <div className="absolute inset-0 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <Camera className="h-6 w-6 text-white" />
+                    </div>
                     <label
                       htmlFor="avatar-upload"
                       className={cn(
@@ -306,20 +418,20 @@ export default function ProfileSettingsPage() {
                     </p>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
+              </GlassCardContent>
+            </GlassCard>
 
             {/* Personal Information */}
-            <Card>
-              <CardHeader>
+            <GlassCard glow hoverable>
+              <GlassCardHeader>
                 <CardTitle className={cn(isRTL && 'font-arabic')}>
                   {isRTL ? 'المعلومات الشخصية' : 'Personal Information'}
                 </CardTitle>
                 <CardDescription>
                   {isRTL ? 'قم بتحديث معلومات حسابك' : 'Update your account information'}
                 </CardDescription>
-              </CardHeader>
-              <CardContent>
+              </GlassCardHeader>
+              <GlassCardContent>
                 <Form {...form}>
                   <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                     <FormField
@@ -384,17 +496,17 @@ export default function ProfileSettingsPage() {
                     </div>
                   </form>
                 </Form>
-              </CardContent>
-            </Card>
+              </GlassCardContent>
+            </GlassCard>
 
             {/* Email Section (read-only) */}
-            <Card>
-              <CardHeader>
+            <GlassCard glow hoverable>
+              <GlassCardHeader>
                 <CardTitle className={cn(isRTL && 'font-arabic')}>
                   {isRTL ? 'البريد الإلكتروني' : 'Email Address'}
                 </CardTitle>
-              </CardHeader>
-              <CardContent>
+              </GlassCardHeader>
+              <GlassCardContent>
                 <div className="flex items-center gap-4">
                   <div className="flex-1">
                     <Input 
@@ -411,18 +523,17 @@ export default function ProfileSettingsPage() {
                     : 'Your email is linked to your account and cannot be changed'
                   }
                 </p>
-              </CardContent>
-            </Card>
+              </GlassCardContent>
+            </GlassCard>
           </TabsContent>
 
           {/* Notifications Tab */}
           <TabsContent value="notifications" className="space-y-6">
             {/* Push Notification Status */}
-            <Card className={cn(
-              'border-2',
-              isSubscribed ? 'border-emerald-500/30 bg-emerald-500/5' : 'border-amber-500/30 bg-amber-500/5'
+            <GlassCard glow className={cn(
+              isSubscribed ? 'border-emerald-500/30' : 'border-amber-500/30'
             )}>
-              <CardHeader className="pb-3">
+              <GlassCardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className={cn(
@@ -459,20 +570,20 @@ export default function ProfileSettingsPage() {
                     </Badge>
                   )}
                 </div>
-              </CardHeader>
+              </GlassCardHeader>
               {!pushSupported && (
-                <CardContent className="pt-0">
+                <GlassCardContent className="pt-0">
                   <div className="flex items-center gap-2 text-amber-600 text-sm">
                     <AlertTriangle className="h-4 w-4" />
                     {isRTL ? 'الإشعارات غير مدعومة في هذا المتصفح' : 'Push notifications are not supported in this browser'}
                   </div>
-                </CardContent>
+                </GlassCardContent>
               )}
-            </Card>
+            </GlassCard>
 
             {/* Email Notifications */}
-            <Card>
-              <CardHeader>
+            <GlassCard glow hoverable>
+              <GlassCardHeader>
                 <div className="flex items-center gap-3">
                   <div className="p-2 rounded-lg bg-primary/10">
                     <Mail className="h-5 w-5 text-primary" />
@@ -486,8 +597,8 @@ export default function ProfileSettingsPage() {
                     </CardDescription>
                   </div>
                 </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
+              </GlassCardHeader>
+              <GlassCardContent className="space-y-4">
                 <div className="flex items-center justify-between py-2">
                   <div className="flex items-center gap-3">
                     <Calendar className="h-4 w-4 text-muted-foreground" />
@@ -500,9 +611,7 @@ export default function ProfileSettingsPage() {
                   </div>
                   <Switch
                     checked={notificationPrefs.email_bookings}
-                    onCheckedChange={(checked) => 
-                      setNotificationPrefs(prev => ({ ...prev, email_bookings: checked }))
-                    }
+                    onCheckedChange={(checked) => handleToggleWithHaptic(checked, 'email_bookings')}
                   />
                 </div>
                 <Separator />
@@ -518,9 +627,7 @@ export default function ProfileSettingsPage() {
                   </div>
                   <Switch
                     checked={notificationPrefs.email_kyc}
-                    onCheckedChange={(checked) => 
-                      setNotificationPrefs(prev => ({ ...prev, email_kyc: checked }))
-                    }
+                    onCheckedChange={(checked) => handleToggleWithHaptic(checked, 'email_kyc')}
                   />
                 </div>
                 <Separator />
@@ -536,9 +643,7 @@ export default function ProfileSettingsPage() {
                   </div>
                   <Switch
                     checked={notificationPrefs.email_messages}
-                    onCheckedChange={(checked) => 
-                      setNotificationPrefs(prev => ({ ...prev, email_messages: checked }))
-                    }
+                    onCheckedChange={(checked) => handleToggleWithHaptic(checked, 'email_messages')}
                   />
                 </div>
                 <Separator />
@@ -554,143 +659,15 @@ export default function ProfileSettingsPage() {
                   </div>
                   <Switch
                     checked={notificationPrefs.email_marketing}
-                    onCheckedChange={(checked) => 
-                      setNotificationPrefs(prev => ({ ...prev, email_marketing: checked }))
-                    }
+                    onCheckedChange={(checked) => handleToggleWithHaptic(checked, 'email_marketing')}
                   />
                 </div>
-              </CardContent>
-            </Card>
-
-            {/* Push Notifications by Event Type */}
-            <Card>
-              <CardHeader>
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-primary/10">
-                    <Smartphone className="h-5 w-5 text-primary" />
-                  </div>
-                  <div>
-                    <CardTitle className={cn(isRTL && 'font-arabic')}>
-                      {isRTL ? 'إشعارات الدفع حسب النوع' : 'Push Notifications by Type'}
-                    </CardTitle>
-                    <CardDescription>
-                      {isRTL ? 'تحكم في أنواع الإشعارات الفورية' : 'Control which push notifications you receive'}
-                    </CardDescription>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between py-2">
-                  <div className="flex items-center gap-3">
-                    <Calendar className="h-4 w-4 text-muted-foreground" />
-                    <div className="space-y-0.5">
-                      <Label>{isRTL ? 'تحديثات الحجوزات' : 'Booking Updates'}</Label>
-                      <p className="text-sm text-muted-foreground">
-                        {isRTL ? 'إشعارات فورية عند تغيير حالة الحجز' : 'Instant alerts when booking status changes'}
-                      </p>
-                    </div>
-                  </div>
-                  <Switch
-                    checked={notificationPrefs.push_bookings}
-                    onCheckedChange={(checked) => 
-                      setNotificationPrefs(prev => ({ ...prev, push_bookings: checked }))
-                    }
-                    disabled={!isSubscribed}
-                  />
-                </div>
-                <Separator />
-                <div className="flex items-center justify-between py-2">
-                  <div className="flex items-center gap-3">
-                    <Shield className="h-4 w-4 text-muted-foreground" />
-                    <div className="space-y-0.5">
-                      <Label>{isRTL ? 'تحديثات التحقق' : 'KYC Updates'}</Label>
-                      <p className="text-sm text-muted-foreground">
-                        {isRTL ? 'إشعارات عند الموافقة أو الرفض' : 'Alerts when approved or rejected'}
-                      </p>
-                    </div>
-                  </div>
-                  <Switch
-                    checked={notificationPrefs.push_kyc}
-                    onCheckedChange={(checked) => 
-                      setNotificationPrefs(prev => ({ ...prev, push_kyc: checked }))
-                    }
-                    disabled={!isSubscribed}
-                  />
-                </div>
-                <Separator />
-                <div className="flex items-center justify-between py-2">
-                  <div className="flex items-center gap-3">
-                    <MessageSquare className="h-4 w-4 text-muted-foreground" />
-                    <div className="space-y-0.5">
-                      <Label>{isRTL ? 'الرسائل' : 'Messages'}</Label>
-                      <p className="text-sm text-muted-foreground">
-                        {isRTL ? 'إشعارات عند استلام رسائل جديدة' : 'Alerts when you receive new messages'}
-                      </p>
-                    </div>
-                  </div>
-                  <Switch
-                    checked={notificationPrefs.push_messages}
-                    onCheckedChange={(checked) => 
-                      setNotificationPrefs(prev => ({ ...prev, push_messages: checked }))
-                    }
-                    disabled={!isSubscribed}
-                  />
-                </div>
-                <Separator />
-                <div className="flex items-center justify-between py-2">
-                  <div className="flex items-center gap-3">
-                    <User className="h-4 w-4 text-muted-foreground" />
-                    <div className="space-y-0.5">
-                      <Label>{isRTL ? 'التقييمات' : 'Reviews'}</Label>
-                      <p className="text-sm text-muted-foreground">
-                        {isRTL ? 'إشعارات عند استلام تقييمات جديدة' : 'Alerts when you receive new reviews'}
-                      </p>
-                    </div>
-                  </div>
-                  <Switch
-                    checked={notificationPrefs.push_reviews}
-                    onCheckedChange={(checked) => 
-                      setNotificationPrefs(prev => ({ ...prev, push_reviews: checked }))
-                    }
-                    disabled={!isSubscribed}
-                  />
-                </div>
-                <Separator />
-                <div className="flex items-center justify-between py-2">
-                  <div className="flex items-center gap-3">
-                    <Bell className="h-4 w-4 text-muted-foreground" />
-                    <div className="space-y-0.5">
-                      <Label>{isRTL ? 'إشعارات النظام' : 'System Notifications'}</Label>
-                      <p className="text-sm text-muted-foreground">
-                        {isRTL ? 'تحديثات وإعلانات هامة' : 'Important updates and announcements'}
-                      </p>
-                    </div>
-                  </div>
-                  <Switch
-                    checked={notificationPrefs.push_system}
-                    onCheckedChange={(checked) => 
-                      setNotificationPrefs(prev => ({ ...prev, push_system: checked }))
-                    }
-                    disabled={!isSubscribed}
-                  />
-                </div>
-                
-                {!isSubscribed && (
-                  <div className="mt-4 p-3 rounded-lg bg-muted/50 border border-border">
-                    <p className="text-sm text-muted-foreground text-center">
-                      {isRTL 
-                        ? 'فعّل إشعارات الدفع أعلاه للتحكم في هذه الإعدادات'
-                        : 'Enable push notifications above to control these settings'
-                      }
-                    </p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+              </GlassCardContent>
+            </GlassCard>
 
             {/* Sync Status */}
-            <Card>
-              <CardHeader>
+            <GlassCard glow hoverable>
+              <GlassCardHeader>
                 <div className="flex items-center gap-3">
                   <div className={cn(
                     'p-2 rounded-lg',
@@ -714,8 +691,8 @@ export default function ProfileSettingsPage() {
                     </CardDescription>
                   </div>
                 </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
+              </GlassCardHeader>
+              <GlassCardContent className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
                     <Label>{isRTL ? 'العمليات المعلقة' : 'Pending Operations'}</Label>
@@ -750,14 +727,12 @@ export default function ProfileSettingsPage() {
                         {isRTL ? 'جاري المزامنة...' : 'Syncing...'}
                       </>
                     ) : (
-                      <>
-                        {isRTL ? 'مزامنة الآن' : 'Sync Now'}
-                      </>
+                      isRTL ? 'مزامنة الآن' : 'Sync Now'
                     )}
                   </Button>
                 )}
-              </CardContent>
-            </Card>
+              </GlassCardContent>
+            </GlassCard>
 
             {/* Save Button */}
             <div className="flex justify-end">
@@ -770,13 +745,13 @@ export default function ProfileSettingsPage() {
 
           {/* Preferences Tab */}
           <TabsContent value="preferences" className="space-y-6">
-            <Card>
-              <CardHeader>
+            <GlassCard glow hoverable>
+              <GlassCardHeader>
                 <CardTitle className={cn(isRTL && 'font-arabic')}>
                   {isRTL ? 'اللغة والمنطقة' : 'Language & Region'}
                 </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
+              </GlassCardHeader>
+              <GlassCardContent className="space-y-4">
                 <div className="space-y-2">
                   <Label>{isRTL ? 'لغة العرض' : 'Display Language'}</Label>
                   <Select value={language} onValueChange={(v) => setLanguage(v as 'en' | 'ar')}>
@@ -789,11 +764,258 @@ export default function ProfileSettingsPage() {
                     </SelectContent>
                   </Select>
                 </div>
-              </CardContent>
-            </Card>
+              </GlassCardContent>
+            </GlassCard>
+
+            {/* Data Export */}
+            <GlassCard glow hoverable>
+              <GlassCardHeader>
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-primary/10">
+                    <Download className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <CardTitle className={cn(isRTL && 'font-arabic')}>
+                      {isRTL ? 'تصدير البيانات' : 'Export Your Data'}
+                    </CardTitle>
+                    <CardDescription>
+                      {isRTL 
+                        ? 'قم بتنزيل نسخة من بياناتك الشخصية'
+                        : 'Download a copy of your personal data'}
+                    </CardDescription>
+                  </div>
+                </div>
+              </GlassCardHeader>
+              <GlassCardContent>
+                <p className="text-sm text-muted-foreground mb-4">
+                  {isRTL 
+                    ? 'يتضمن هذا ملفك الشخصي وحجوزاتك ورسائلك وأي بيانات أخرى مرتبطة بحسابك.'
+                    : 'This includes your profile, bookings, messages, and any other data associated with your account.'}
+                </p>
+                <Button 
+                  variant="outline" 
+                  onClick={handleExportData}
+                  disabled={isExportingData}
+                >
+                  {isExportingData ? (
+                    <>
+                      <Loader2 className="h-4 w-4 me-2 animate-spin" />
+                      {isRTL ? 'جاري الطلب...' : 'Requesting...'}
+                    </>
+                  ) : (
+                    <>
+                      <Download className="h-4 w-4 me-2" />
+                      {isRTL ? 'طلب تصدير البيانات' : 'Request Data Export'}
+                    </>
+                  )}
+                </Button>
+              </GlassCardContent>
+            </GlassCard>
+          </TabsContent>
+
+          {/* Security Tab */}
+          <TabsContent value="security" className="space-y-6">
+            {/* Change Password */}
+            <GlassCard glow hoverable>
+              <GlassCardHeader>
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-primary/10">
+                    <Key className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <CardTitle className={cn(isRTL && 'font-arabic')}>
+                      {isRTL ? 'تغيير كلمة المرور' : 'Change Password'}
+                    </CardTitle>
+                    <CardDescription>
+                      {isRTL ? 'قم بتحديث كلمة مرورك بانتظام للحفاظ على أمان حسابك' : 'Update your password regularly to keep your account secure'}
+                    </CardDescription>
+                  </div>
+                </div>
+              </GlassCardHeader>
+              <GlassCardContent>
+                <Form {...passwordForm}>
+                  <form onSubmit={passwordForm.handleSubmit(handlePasswordChange)} className="space-y-4">
+                    <FormField
+                      control={passwordForm.control}
+                      name="currentPassword"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>{isRTL ? 'كلمة المرور الحالية' : 'Current Password'}</FormLabel>
+                          <FormControl>
+                            <Input type="password" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={passwordForm.control}
+                      name="newPassword"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>{isRTL ? 'كلمة المرور الجديدة' : 'New Password'}</FormLabel>
+                          <FormControl>
+                            <Input type="password" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={passwordForm.control}
+                      name="confirmPassword"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>{isRTL ? 'تأكيد كلمة المرور' : 'Confirm Password'}</FormLabel>
+                          <FormControl>
+                            <Input type="password" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <Button type="submit" disabled={isChangingPassword}>
+                      {isChangingPassword && <Loader2 className="me-2 h-4 w-4 animate-spin" />}
+                      {isRTL ? 'تغيير كلمة المرور' : 'Change Password'}
+                    </Button>
+                  </form>
+                </Form>
+              </GlassCardContent>
+            </GlassCard>
+
+            {/* Active Sessions */}
+            <GlassCard glow hoverable>
+              <GlassCardHeader>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-primary/10">
+                      <Monitor className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                      <CardTitle className={cn(isRTL && 'font-arabic')}>
+                        {isRTL ? 'الجلسات النشطة' : 'Active Sessions'}
+                      </CardTitle>
+                      <CardDescription>
+                        {isRTL ? 'الأجهزة التي سجلت الدخول منها' : 'Devices where you are logged in'}
+                      </CardDescription>
+                    </div>
+                  </div>
+                  {sessions.length > 1 && (
+                    <Button variant="outline" size="sm" onClick={handleSignOutAllSessions}>
+                      <LogOut className="h-4 w-4 me-2" />
+                      {isRTL ? 'تسجيل خروج الكل' : 'Sign Out All'}
+                    </Button>
+                  )}
+                </div>
+              </GlassCardHeader>
+              <GlassCardContent className="space-y-3">
+                {sessions.map((session) => (
+                  <div 
+                    key={session.id}
+                    className={cn(
+                      'flex items-center justify-between p-3 rounded-lg border',
+                      session.current && 'bg-primary/5 border-primary/20'
+                    )}
+                  >
+                    <div className="flex items-center gap-3">
+                      <Monitor className="h-5 w-5 text-muted-foreground" />
+                      <div>
+                        <p className="font-medium text-sm">{session.device}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {session.location} • {session.lastActive}
+                        </p>
+                      </div>
+                    </div>
+                    {session.current && (
+                      <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30">
+                        {isRTL ? 'الحالي' : 'Current'}
+                      </Badge>
+                    )}
+                  </div>
+                ))}
+              </GlassCardContent>
+            </GlassCard>
+
+            {/* Two-Factor Authentication */}
+            <GlassCard glow hoverable>
+              <GlassCardHeader>
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-primary/10">
+                    <Lock className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <CardTitle className={cn(isRTL && 'font-arabic')}>
+                      {isRTL ? 'المصادقة الثنائية' : 'Two-Factor Authentication'}
+                    </CardTitle>
+                    <CardDescription>
+                      {isRTL ? 'أضف طبقة إضافية من الأمان لحسابك' : 'Add an extra layer of security to your account'}
+                    </CardDescription>
+                  </div>
+                </div>
+              </GlassCardHeader>
+              <GlassCardContent>
+                <div className="flex items-center justify-between p-4 rounded-lg bg-muted/50 border border-dashed">
+                  <div>
+                    <p className="font-medium">{isRTL ? 'غير مفعّل' : 'Not Enabled'}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {isRTL ? 'قريباً' : 'Coming Soon'}
+                    </p>
+                  </div>
+                  <Button variant="outline" disabled>
+                    {isRTL ? 'تفعيل' : 'Enable'}
+                  </Button>
+                </div>
+              </GlassCardContent>
+            </GlassCard>
+
+            {/* Delete Account */}
+            <GlassCard className="border-destructive/30" hoverable>
+              <GlassCardHeader>
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-destructive/10">
+                    <Trash2 className="h-5 w-5 text-destructive" />
+                  </div>
+                  <div>
+                    <CardTitle className={cn('text-destructive', isRTL && 'font-arabic')}>
+                      {isRTL ? 'حذف الحساب' : 'Delete Account'}
+                    </CardTitle>
+                    <CardDescription>
+                      {isRTL ? 'احذف حسابك وجميع بياناتك نهائياً' : 'Permanently delete your account and all your data'}
+                    </CardDescription>
+                  </div>
+                </div>
+              </GlassCardHeader>
+              <GlassCardContent>
+                <p className="text-sm text-muted-foreground mb-4">
+                  {isRTL 
+                    ? 'بمجرد حذف حسابك، لا يمكن استعادته. سيتم حذف جميع بياناتك نهائياً.'
+                    : 'Once you delete your account, there is no going back. All your data will be permanently deleted.'}
+                </p>
+                <Button 
+                  variant="destructive" 
+                  onClick={() => setShowDeleteDialog(true)}
+                >
+                  <Trash2 className="h-4 w-4 me-2" />
+                  {isRTL ? 'حذف الحساب' : 'Delete Account'}
+                </Button>
+              </GlassCardContent>
+            </GlassCard>
           </TabsContent>
         </Tabs>
       </div>
+
+      <ConfirmDialog
+        open={showDeleteDialog}
+        onOpenChange={setShowDeleteDialog}
+        title={isRTL ? 'حذف الحساب' : 'Delete Account'}
+        description={isRTL 
+          ? 'هل أنت متأكد أنك تريد حذف حسابك؟ هذا الإجراء لا يمكن التراجع عنه.'
+          : 'Are you sure you want to delete your account? This action cannot be undone.'}
+        confirmLabel={isRTL ? 'حذف الحساب' : 'Delete Account'}
+        cancelLabel={isRTL ? 'إلغاء' : 'Cancel'}
+        variant="destructive"
+        onConfirm={handleDeleteAccount}
+      />
     </DashboardLayout>
   );
 }

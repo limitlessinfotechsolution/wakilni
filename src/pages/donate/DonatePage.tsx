@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Heart, CreditCard, Building2, Wallet, Check, Gift, Users, Sparkles, Star, Moon } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Heart, CreditCard, Building2, Wallet, Check, Gift, Users, Sparkles, Star, Moon, Calculator, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -7,7 +7,10 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { MainLayout } from '@/components/layout';
+import { Switch } from '@/components/ui/switch';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { MainLayout, DashboardLayout } from '@/components/layout';
+import { GlassCard, GlassCardContent, GlassCardHeader } from '@/components/cards/GlassCard';
 import { useLanguage } from '@/lib/i18n';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -25,6 +28,35 @@ const CHARITY_STATS = {
   activeRequests: 12,
 };
 
+// Animated counter hook
+function useAnimatedCounter(target: number, duration: number = 2000) {
+  const [count, setCount] = useState(0);
+  const countRef = useRef(0);
+  const startTimeRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    startTimeRef.current = null;
+    countRef.current = 0;
+
+    const animate = (timestamp: number) => {
+      if (!startTimeRef.current) startTimeRef.current = timestamp;
+      const progress = Math.min((timestamp - startTimeRef.current) / duration, 1);
+      
+      const easeOutQuart = 1 - Math.pow(1 - progress, 4);
+      countRef.current = Math.floor(target * easeOutQuart);
+      setCount(countRef.current);
+
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      }
+    };
+
+    requestAnimationFrame(animate);
+  }, [target, duration]);
+
+  return count;
+}
+
 export default function DonatePage() {
   const { isRTL } = useLanguage();
   const { toast } = useToast();
@@ -39,6 +71,20 @@ export default function DonatePage() {
   const [paymentMethod, setPaymentMethod] = useState('card');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
+  const [isRecurring, setIsRecurring] = useState(false);
+  const [activeTab, setActiveTab] = useState('donate');
+  
+  // Zakat calculator state
+  const [wealth, setWealth] = useState<number>(0);
+  const zakatAmount = wealth * 0.025; // 2.5% Zakat
+
+  // Animated counters
+  const animatedTotal = useAnimatedCounter(CHARITY_STATS.totalRaised);
+  const animatedBeneficiaries = useAnimatedCounter(CHARITY_STATS.beneficiariesHelped);
+  const animatedRequests = useAnimatedCounter(CHARITY_STATS.activeRequests);
+
+  // Conditional layout based on auth status
+  const Layout = user ? DashboardLayout : MainLayout;
 
   const handleAmountSelect = (value: number) => {
     setAmount(value);
@@ -52,6 +98,20 @@ export default function DonatePage() {
       setAmount(numValue);
     } else {
       setAmount('');
+    }
+  };
+
+  const handleUseZakatAmount = () => {
+    if (zakatAmount > 0) {
+      setAmount(zakatAmount);
+      setCustomAmount(zakatAmount.toString());
+      setActiveTab('donate');
+      toast({
+        title: isRTL ? 'تم تطبيق مبلغ الزكاة' : 'Zakat amount applied',
+        description: isRTL 
+          ? `تم تعيين مبلغ التبرع إلى ${zakatAmount.toLocaleString()} ريال`
+          : `Donation amount set to SAR ${zakatAmount.toLocaleString()}`,
+      });
     }
   };
 
@@ -107,12 +167,12 @@ export default function DonatePage() {
 
   if (isComplete) {
     return (
-      <MainLayout>
+      <Layout>
         <div className="container max-w-2xl py-16 px-4">
-          <Card className="text-center border-2 border-primary/20 overflow-hidden">
+          <GlassCard glow className="text-center overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5 pointer-events-none" />
-            <CardContent className="pt-12 pb-12 relative">
-              <div className="mx-auto w-24 h-24 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center mb-6 shadow-lg">
+            <GlassCardContent className="pt-12 pb-12 relative">
+              <div className="mx-auto w-24 h-24 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center mb-6 shadow-lg animate-scale-in">
                 <Check className="h-12 w-12 text-white" />
               </div>
               <h1 className={cn('text-3xl font-bold mb-4 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent', isRTL && 'font-arabic')}>
@@ -123,6 +183,11 @@ export default function DonatePage() {
                   ? `تم استلام تبرعك بمبلغ ${amount} ريال سعودي بنجاح`
                   : `Your donation of SAR ${amount} has been received successfully`}
               </p>
+              {isRecurring && (
+                <p className="text-primary font-medium mb-2">
+                  {isRTL ? 'تبرع شهري متكرر' : 'Monthly recurring donation'}
+                </p>
+              )}
               <p className="text-muted-foreground mb-8">
                 {isRTL 
                   ? 'سيتم استخدام تبرعك لمساعدة المحتاجين على أداء مناسك الحج والعمرة'
@@ -137,15 +202,15 @@ export default function DonatePage() {
                   <a href="/">{isRTL ? 'العودة للرئيسية' : 'Back to Home'}</a>
                 </Button>
               </div>
-            </CardContent>
-          </Card>
+            </GlassCardContent>
+          </GlassCard>
         </div>
-      </MainLayout>
+      </Layout>
     );
   }
 
   return (
-    <MainLayout>
+    <Layout>
       <div className="container max-w-6xl py-8 md:py-12 px-4">
         {/* Hero Section */}
         <div className="text-center mb-8 md:mb-12">
@@ -162,43 +227,43 @@ export default function DonatePage() {
           </p>
         </div>
 
-        {/* Stats Cards */}
+        {/* Stats Cards with Animated Counters */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-8">
-          <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
-            <CardContent className="pt-4 md:pt-6 text-center">
+          <GlassCard glow hoverable className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
+            <GlassCardContent className="pt-4 md:pt-6 text-center">
               <Heart className="h-6 w-6 md:h-8 md:w-8 mx-auto mb-2 text-primary" />
-              <p className="text-xl md:text-2xl font-bold text-primary">
-                {CHARITY_STATS.totalRaised.toLocaleString()}
+              <p className="text-xl md:text-2xl font-bold text-primary tabular-nums">
+                {animatedTotal.toLocaleString()}
               </p>
               <p className="text-xs md:text-sm text-muted-foreground">
                 {isRTL ? 'ر.س تم جمعها' : 'SAR Raised'}
               </p>
-            </CardContent>
-          </Card>
-          <Card className="bg-gradient-to-br from-secondary/10 to-secondary/5 border-secondary/20">
-            <CardContent className="pt-4 md:pt-6 text-center">
+            </GlassCardContent>
+          </GlassCard>
+          <GlassCard glow hoverable className="bg-gradient-to-br from-secondary/10 to-secondary/5 border-secondary/20">
+            <GlassCardContent className="pt-4 md:pt-6 text-center">
               <Users className="h-6 w-6 md:h-8 md:w-8 mx-auto mb-2 text-secondary" />
-              <p className="text-xl md:text-2xl font-bold text-secondary">
-                {CHARITY_STATS.beneficiariesHelped}
+              <p className="text-xl md:text-2xl font-bold text-secondary tabular-nums">
+                {animatedBeneficiaries}
               </p>
               <p className="text-xs md:text-sm text-muted-foreground">
                 {isRTL ? 'مستفيد' : 'Helped'}
               </p>
-            </CardContent>
-          </Card>
-          <Card className="bg-gradient-to-br from-accent/10 to-accent/5 border-accent/20">
-            <CardContent className="pt-4 md:pt-6 text-center">
+            </GlassCardContent>
+          </GlassCard>
+          <GlassCard glow hoverable className="bg-gradient-to-br from-accent/10 to-accent/5 border-accent/20">
+            <GlassCardContent className="pt-4 md:pt-6 text-center">
               <Star className="h-6 w-6 md:h-8 md:w-8 mx-auto mb-2 text-accent" />
-              <p className="text-xl md:text-2xl font-bold text-accent">
-                {CHARITY_STATS.activeRequests}
+              <p className="text-xl md:text-2xl font-bold text-accent tabular-nums">
+                {animatedRequests}
               </p>
               <p className="text-xs md:text-sm text-muted-foreground">
                 {isRTL ? 'طلب نشط' : 'Active Requests'}
               </p>
-            </CardContent>
-          </Card>
-          <Card className="bg-gradient-to-br from-purple-500/10 to-purple-500/5 border-purple-500/20">
-            <CardContent className="pt-4 md:pt-6 text-center">
+            </GlassCardContent>
+          </GlassCard>
+          <GlassCard glow hoverable className="bg-gradient-to-br from-purple-500/10 to-purple-500/5 border-purple-500/20">
+            <GlassCardContent className="pt-4 md:pt-6 text-center">
               <Sparkles className="h-6 w-6 md:h-8 md:w-8 mx-auto mb-2 text-purple-500" />
               <p className="text-xl md:text-2xl font-bold text-purple-500">
                 {progressPercentage.toFixed(0)}%
@@ -206,13 +271,13 @@ export default function DonatePage() {
               <p className="text-xs md:text-sm text-muted-foreground">
                 {isRTL ? 'من الهدف' : 'of Goal'}
               </p>
-            </CardContent>
-          </Card>
+            </GlassCardContent>
+          </GlassCard>
         </div>
 
         {/* Progress Bar */}
-        <Card className="mb-8 border-2">
-          <CardContent className="pt-6">
+        <GlassCard className="mb-8">
+          <GlassCardContent className="pt-6">
             <div className="flex items-center justify-between mb-3">
               <span className="font-medium">
                 {isRTL ? 'التقدم نحو الهدف' : 'Progress to Goal'}
@@ -222,177 +287,269 @@ export default function DonatePage() {
               </span>
             </div>
             <Progress value={progressPercentage} className="h-3" />
-          </CardContent>
-        </Card>
+          </GlassCardContent>
+        </GlassCard>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
-          {/* Donation Form */}
+          {/* Donation Form with Tabs */}
           <div className="lg:col-span-2">
-            <Card className="border-2">
-              <CardHeader>
-                <CardTitle className={cn('flex items-center gap-2', isRTL && 'font-arabic')}>
-                  <Gift className="h-5 w-5 text-primary" />
-                  {isRTL ? 'مبلغ التبرع' : 'Donation Amount'}
-                </CardTitle>
-                <CardDescription>
-                  {isRTL ? 'اختر مبلغ التبرع أو أدخل مبلغاً مخصصاً' : 'Select an amount or enter a custom value'}
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                {/* Preset Amounts */}
-                <div className="grid grid-cols-3 gap-2 md:gap-3">
-                  {PRESET_AMOUNTS.map((preset) => (
-                    <Button
-                      key={preset}
-                      variant={amount === preset ? 'default' : 'outline'}
-                      className={cn(
-                        'h-12 md:h-14 text-base md:text-lg font-semibold transition-all',
-                        amount === preset && 'ring-2 ring-primary ring-offset-2'
+            <GlassCard>
+              <Tabs value={activeTab} onValueChange={setActiveTab}>
+                <GlassCardHeader>
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="donate" className="flex items-center gap-2">
+                      <Gift className="h-4 w-4" />
+                      {isRTL ? 'تبرع' : 'Donate'}
+                    </TabsTrigger>
+                    <TabsTrigger value="zakat" className="flex items-center gap-2">
+                      <Calculator className="h-4 w-4" />
+                      {isRTL ? 'حاسبة الزكاة' : 'Zakat Calculator'}
+                    </TabsTrigger>
+                  </TabsList>
+                </GlassCardHeader>
+
+                <GlassCardContent className="space-y-6">
+                  {/* Zakat Calculator Tab */}
+                  <TabsContent value="zakat" className="mt-0 space-y-6">
+                    <div>
+                      <CardTitle className={cn('text-lg mb-2', isRTL && 'font-arabic')}>
+                        {isRTL ? 'احسب زكاتك' : 'Calculate Your Zakat'}
+                      </CardTitle>
+                      <CardDescription>
+                        {isRTL 
+                          ? 'أدخل إجمالي ثروتك لحساب الزكاة المستحقة (2.5%)'
+                          : 'Enter your total wealth to calculate Zakat due (2.5%)'}
+                      </CardDescription>
+                    </div>
+
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label className="text-base">{isRTL ? 'إجمالي الثروة' : 'Total Wealth'}</Label>
+                        <div className="relative">
+                          <Input
+                            type="number"
+                            placeholder={isRTL ? 'أدخل إجمالي ثروتك...' : 'Enter your total wealth...'}
+                            value={wealth || ''}
+                            onChange={(e) => setWealth(parseFloat(e.target.value) || 0)}
+                            className="h-12 text-lg ps-16"
+                          />
+                          <span className="absolute start-4 top-1/2 -translate-y-1/2 text-muted-foreground font-medium">
+                            {isRTL ? 'ر.س' : 'SAR'}
+                          </span>
+                        </div>
+                      </div>
+
+                      <GlassCard variant="gradient" className="p-4">
+                        <div className="flex items-center justify-between">
+                          <span className="text-muted-foreground">
+                            {isRTL ? 'الزكاة المستحقة (2.5%)' : 'Zakat Due (2.5%)'}
+                          </span>
+                          <span className="text-2xl font-bold text-primary">
+                            {zakatAmount.toLocaleString()} {isRTL ? 'ر.س' : 'SAR'}
+                          </span>
+                        </div>
+                      </GlassCard>
+
+                      <Button 
+                        onClick={handleUseZakatAmount}
+                        disabled={zakatAmount <= 0}
+                        className="w-full bg-gradient-to-r from-primary to-secondary"
+                      >
+                        <Gift className="h-4 w-4 me-2" />
+                        {isRTL ? 'استخدم هذا المبلغ للتبرع' : 'Use This Amount to Donate'}
+                      </Button>
+
+                      <p className="text-sm text-muted-foreground text-center">
+                        {isRTL 
+                          ? 'ملاحظة: هذه الحاسبة للإرشاد فقط. يرجى استشارة عالم للحصول على فتوى دقيقة.'
+                          : 'Note: This calculator is for guidance only. Please consult a scholar for an accurate ruling.'}
+                      </p>
+                    </div>
+                  </TabsContent>
+
+                  {/* Donate Tab */}
+                  <TabsContent value="donate" className="mt-0 space-y-6">
+                    {/* Preset Amounts */}
+                    <div>
+                      <Label className="text-base mb-3 block">{isRTL ? 'اختر مبلغاً' : 'Select Amount'}</Label>
+                      <div className="grid grid-cols-3 gap-2 md:gap-3">
+                        {PRESET_AMOUNTS.map((preset) => (
+                          <Button
+                            key={preset}
+                            variant={amount === preset ? 'default' : 'outline'}
+                            className={cn(
+                              'h-12 md:h-14 text-base md:text-lg font-semibold transition-all',
+                              amount === preset && 'ring-2 ring-primary ring-offset-2'
+                            )}
+                            onClick={() => handleAmountSelect(preset)}
+                          >
+                            {preset} {isRTL ? 'ر.س' : 'SAR'}
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Custom Amount */}
+                    <div className="space-y-2">
+                      <Label className="text-base">{isRTL ? 'مبلغ مخصص' : 'Custom Amount'}</Label>
+                      <div className="relative">
+                        <Input
+                          type="number"
+                          placeholder={isRTL ? 'أدخل مبلغاً...' : 'Enter amount...'}
+                          value={customAmount}
+                          onChange={(e) => handleCustomAmountChange(e.target.value)}
+                          className="h-12 text-lg ps-16"
+                        />
+                        <span className="absolute start-4 top-1/2 -translate-y-1/2 text-muted-foreground font-medium">
+                          {isRTL ? 'ر.س' : 'SAR'}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Recurring Donation Toggle */}
+                    <div className="flex items-center justify-between p-4 rounded-lg border-2 border-dashed">
+                      <div className="flex items-center gap-3">
+                        <RefreshCw className={cn('h-5 w-5', isRecurring ? 'text-primary' : 'text-muted-foreground')} />
+                        <div>
+                          <Label className="cursor-pointer" htmlFor="recurring">
+                            {isRTL ? 'تبرع شهري متكرر' : 'Monthly Recurring Donation'}
+                          </Label>
+                          <p className="text-sm text-muted-foreground">
+                            {isRTL ? 'تبرع تلقائياً كل شهر' : 'Automatically donate every month'}
+                          </p>
+                        </div>
+                      </div>
+                      <Switch
+                        id="recurring"
+                        checked={isRecurring}
+                        onCheckedChange={setIsRecurring}
+                      />
+                    </div>
+
+                    {/* Donor Info */}
+                    <div className="space-y-4 pt-4 border-t">
+                      <div className="flex items-center space-x-2 rtl:space-x-reverse">
+                        <Checkbox 
+                          id="anonymous" 
+                          checked={isAnonymous}
+                          onCheckedChange={(checked) => setIsAnonymous(checked as boolean)}
+                        />
+                        <Label htmlFor="anonymous" className="cursor-pointer">
+                          {isRTL ? 'تبرع بشكل مجهول' : 'Donate anonymously'}
+                        </Label>
+                      </div>
+
+                      {!isAnonymous && (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label>{isRTL ? 'الاسم' : 'Name'}</Label>
+                            <Input
+                              value={donorName}
+                              onChange={(e) => setDonorName(e.target.value)}
+                              placeholder={isRTL ? 'اسمك الكريم' : 'Your name'}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>{isRTL ? 'البريد الإلكتروني' : 'Email'}</Label>
+                            <Input
+                              type="email"
+                              value={donorEmail}
+                              onChange={(e) => setDonorEmail(e.target.value)}
+                              placeholder={isRTL ? 'بريدك الإلكتروني' : 'Your email'}
+                            />
+                          </div>
+                        </div>
                       )}
-                      onClick={() => handleAmountSelect(preset)}
+
+                      <div className="space-y-2">
+                        <Label>{isRTL ? 'رسالة (اختياري)' : 'Message (optional)'}</Label>
+                        <Textarea
+                          value={message}
+                          onChange={(e) => setMessage(e.target.value)}
+                          placeholder={isRTL ? 'أضف رسالة أو دعاء...' : 'Add a message or prayer...'}
+                          rows={3}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Payment Method */}
+                    <div className="space-y-4 pt-4 border-t">
+                      <Label className="text-base font-semibold">
+                        {isRTL ? 'طريقة الدفع' : 'Payment Method'}
+                      </Label>
+                      <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod}>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                          <Label
+                            htmlFor="card"
+                            className={cn(
+                              'flex items-center gap-3 p-4 border-2 rounded-lg cursor-pointer transition-all',
+                              paymentMethod === 'card' ? 'border-primary bg-primary/5 ring-2 ring-primary ring-offset-2' : 'hover:bg-muted/50'
+                            )}
+                          >
+                            <RadioGroupItem value="card" id="card" />
+                            <CreditCard className="h-5 w-5" />
+                            <span>{isRTL ? 'بطاقة ائتمان' : 'Credit Card'}</span>
+                          </Label>
+                          <Label
+                            htmlFor="bank"
+                            className={cn(
+                              'flex items-center gap-3 p-4 border-2 rounded-lg cursor-pointer transition-all',
+                              paymentMethod === 'bank' ? 'border-primary bg-primary/5 ring-2 ring-primary ring-offset-2' : 'hover:bg-muted/50'
+                            )}
+                          >
+                            <RadioGroupItem value="bank" id="bank" />
+                            <Building2 className="h-5 w-5" />
+                            <span>{isRTL ? 'تحويل بنكي' : 'Bank Transfer'}</span>
+                          </Label>
+                          <Label
+                            htmlFor="wallet"
+                            className={cn(
+                              'flex items-center gap-3 p-4 border-2 rounded-lg cursor-pointer transition-all',
+                              paymentMethod === 'wallet' ? 'border-primary bg-primary/5 ring-2 ring-primary ring-offset-2' : 'hover:bg-muted/50'
+                            )}
+                          >
+                            <RadioGroupItem value="wallet" id="wallet" />
+                            <Wallet className="h-5 w-5" />
+                            <span>{isRTL ? 'محفظة رقمية' : 'Digital Wallet'}</span>
+                          </Label>
+                        </div>
+                      </RadioGroup>
+                    </div>
+
+                    {/* Submit Button */}
+                    <Button 
+                      size="lg" 
+                      className="w-full h-14 text-lg bg-gradient-to-r from-primary to-secondary hover:opacity-90 transition-opacity"
+                      disabled={!amount || amount <= 0 || isSubmitting}
+                      onClick={handleSubmit}
                     >
-                      {preset} {isRTL ? 'ر.س' : 'SAR'}
+                      {isSubmitting ? (
+                        isRTL ? 'جاري المعالجة...' : 'Processing...'
+                      ) : (
+                        <>
+                          <Heart className="h-5 w-5 me-2" />
+                          {isRTL 
+                            ? `تبرع بمبلغ ${amount || 0} ر.س${isRecurring ? ' شهرياً' : ''}`
+                            : `Donate SAR ${amount || 0}${isRecurring ? '/month' : ''}`}
+                        </>
+                      )}
                     </Button>
-                  ))}
-                </div>
-
-                {/* Custom Amount */}
-                <div className="space-y-2">
-                  <Label className="text-base">{isRTL ? 'مبلغ مخصص' : 'Custom Amount'}</Label>
-                  <div className="relative">
-                    <Input
-                      type="number"
-                      placeholder={isRTL ? 'أدخل مبلغاً...' : 'Enter amount...'}
-                      value={customAmount}
-                      onChange={(e) => handleCustomAmountChange(e.target.value)}
-                      className="h-12 text-lg ps-16"
-                    />
-                    <span className="absolute start-4 top-1/2 -translate-y-1/2 text-muted-foreground font-medium">
-                      {isRTL ? 'ر.س' : 'SAR'}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Donor Info */}
-                <div className="space-y-4 pt-4 border-t">
-                  <div className="flex items-center space-x-2 rtl:space-x-reverse">
-                    <Checkbox 
-                      id="anonymous" 
-                      checked={isAnonymous}
-                      onCheckedChange={(checked) => setIsAnonymous(checked as boolean)}
-                    />
-                    <Label htmlFor="anonymous" className="cursor-pointer">
-                      {isRTL ? 'تبرع بشكل مجهول' : 'Donate anonymously'}
-                    </Label>
-                  </div>
-
-                  {!isAnonymous && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label>{isRTL ? 'الاسم' : 'Name'}</Label>
-                        <Input
-                          value={donorName}
-                          onChange={(e) => setDonorName(e.target.value)}
-                          placeholder={isRTL ? 'اسمك الكريم' : 'Your name'}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label>{isRTL ? 'البريد الإلكتروني' : 'Email'}</Label>
-                        <Input
-                          type="email"
-                          value={donorEmail}
-                          onChange={(e) => setDonorEmail(e.target.value)}
-                          placeholder={isRTL ? 'بريدك الإلكتروني' : 'Your email'}
-                        />
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="space-y-2">
-                    <Label>{isRTL ? 'رسالة (اختياري)' : 'Message (optional)'}</Label>
-                    <Textarea
-                      value={message}
-                      onChange={(e) => setMessage(e.target.value)}
-                      placeholder={isRTL ? 'أضف رسالة أو دعاء...' : 'Add a message or prayer...'}
-                      rows={3}
-                    />
-                  </div>
-                </div>
-
-                {/* Payment Method */}
-                <div className="space-y-4 pt-4 border-t">
-                  <Label className="text-base font-semibold">
-                    {isRTL ? 'طريقة الدفع' : 'Payment Method'}
-                  </Label>
-                  <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod}>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                      <Label
-                        htmlFor="card"
-                        className={cn(
-                          'flex items-center gap-3 p-4 border-2 rounded-lg cursor-pointer transition-all',
-                          paymentMethod === 'card' ? 'border-primary bg-primary/5 ring-2 ring-primary ring-offset-2' : 'hover:bg-muted/50'
-                        )}
-                      >
-                        <RadioGroupItem value="card" id="card" />
-                        <CreditCard className="h-5 w-5" />
-                        <span>{isRTL ? 'بطاقة ائتمان' : 'Credit Card'}</span>
-                      </Label>
-                      <Label
-                        htmlFor="bank"
-                        className={cn(
-                          'flex items-center gap-3 p-4 border-2 rounded-lg cursor-pointer transition-all',
-                          paymentMethod === 'bank' ? 'border-primary bg-primary/5 ring-2 ring-primary ring-offset-2' : 'hover:bg-muted/50'
-                        )}
-                      >
-                        <RadioGroupItem value="bank" id="bank" />
-                        <Building2 className="h-5 w-5" />
-                        <span>{isRTL ? 'تحويل بنكي' : 'Bank Transfer'}</span>
-                      </Label>
-                      <Label
-                        htmlFor="wallet"
-                        className={cn(
-                          'flex items-center gap-3 p-4 border-2 rounded-lg cursor-pointer transition-all',
-                          paymentMethod === 'wallet' ? 'border-primary bg-primary/5 ring-2 ring-primary ring-offset-2' : 'hover:bg-muted/50'
-                        )}
-                      >
-                        <RadioGroupItem value="wallet" id="wallet" />
-                        <Wallet className="h-5 w-5" />
-                        <span>{isRTL ? 'محفظة رقمية' : 'Digital Wallet'}</span>
-                      </Label>
-                    </div>
-                  </RadioGroup>
-                </div>
-
-                {/* Submit Button */}
-                <Button 
-                  size="lg" 
-                  className="w-full h-14 text-lg bg-gradient-to-r from-primary to-secondary hover:opacity-90 transition-opacity"
-                  disabled={!amount || amount <= 0 || isSubmitting}
-                  onClick={handleSubmit}
-                >
-                  {isSubmitting ? (
-                    isRTL ? 'جاري المعالجة...' : 'Processing...'
-                  ) : (
-                    <>
-                      <Heart className="h-5 w-5 me-2" />
-                      {isRTL ? `تبرع بمبلغ ${amount || 0} ر.س` : `Donate SAR ${amount || 0}`}
-                    </>
-                  )}
-                </Button>
-              </CardContent>
-            </Card>
+                  </TabsContent>
+                </GlassCardContent>
+              </Tabs>
+            </GlassCard>
           </div>
 
           {/* Sidebar */}
           <div className="space-y-6">
-            <Card className="border-2 bg-gradient-to-br from-primary/5 to-secondary/5">
-              <CardHeader>
+            <GlassCard glow className="bg-gradient-to-br from-primary/5 to-secondary/5">
+              <GlassCardHeader>
                 <CardTitle className={cn('text-lg flex items-center gap-2', isRTL && 'font-arabic')}>
                   <Sparkles className="h-5 w-5 text-primary" />
                   {isRTL ? 'أثر تبرعك' : 'Your Impact'}
                 </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
+              </GlassCardHeader>
+              <GlassCardContent className="space-y-4">
                 <div className="flex items-start gap-3 p-3 rounded-lg bg-background/60">
                   <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                     <span className="text-primary font-bold text-sm">1</span>
@@ -432,11 +589,11 @@ export default function DonatePage() {
                     </p>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
+              </GlassCardContent>
+            </GlassCard>
 
-            <Card className="border-2">
-              <CardContent className="pt-6">
+            <GlassCard>
+              <GlassCardContent className="pt-6">
                 <div className="flex items-center gap-2 mb-3">
                   <Heart className="h-4 w-4 text-primary" />
                   <span className="font-medium text-sm">{isRTL ? 'وعد الشفافية' : 'Transparency Promise'}</span>
@@ -446,11 +603,11 @@ export default function DonatePage() {
                     ? 'جميع التبرعات تُخصص لمساعدة المحتاجين على أداء فريضة الحج والعمرة. نضمن الشفافية الكاملة في توزيع التبرعات.'
                     : 'All donations are allocated to help those in need perform Hajj and Umrah. We ensure complete transparency in fund distribution.'}
                 </p>
-              </CardContent>
-            </Card>
+              </GlassCardContent>
+            </GlassCard>
           </div>
         </div>
       </div>
-    </MainLayout>
+    </Layout>
   );
 }

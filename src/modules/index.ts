@@ -11,3 +11,15 @@ export * from './bookings';
 
 // Notifications module exports
 export * from './notifications';
+
+// Locations module exports
+export * from './locations';
+
+// Reports module exports
+export * from './reports';
+
+// Services module exports
+export * from './services';
+
+// Providers module exports
+export * from './providers';
