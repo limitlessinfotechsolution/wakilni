@@ -1,322 +1,344 @@
 
-# Phase 3 Completion: Missing Features Implementation
-## Completing DonatePage Migration, ProfileSettingsPage Enhancement, and Additional Feature Modules
+# WAKILNI Production Hardening & Gap Analysis
+## Strategic Implementation Plan for MVP Stabilization
 
 ---
 
-## Executive Summary
+## Current State Assessment
 
-After thorough exploration of the codebase, I've identified the following missing features from the Phase 3 redesign plan:
+After comprehensive codebase analysis, here's an honest assessment of what's **already implemented** versus **true gaps**:
 
-1. **DonatePage.tsx** - Still uses `MainLayout`, needs conditional `DashboardLayout` migration
-2. **ProfileSettingsPage.tsx** - Missing GlassCard styling and security section
-3. **Feature Modules** - Missing `locations`, `reports`, and `services` modules
-4. **Test Coverage** - Missing tests for hooks, components, and role-based routing
-5. **Module Index Files** - Need to add new module exports
+### What's Already Strong
 
----
+| Area | Status | Evidence |
+|------|--------|----------|
+| **Auth & Role Guards** | Implemented | `ProtectedRoute` component in App.tsx with `allowedRoles` support |
+| **RBAC Architecture** | Solid | Separate `user_roles` table with proper RLS, `has_role()` security definer function |
+| **RLS Policies** | 97 policies | Comprehensive coverage across all 27 tables |
+| **API Layer** | Centralized | `/src/api/` with unified response types, error handling |
+| **State Management** | TanStack Query | Used throughout with proper caching |
+| **Input Validation** | Zod schemas | Found in 6+ form components |
+| **Edge Functions** | Production-ready | `create-booking` with server-side price calculation |
+| **Privilege Escalation Protection** | Database-level | Trigger blocks self-assignment of admin roles |
 
-## Batch 1: DonatePage Migration
+### True Gaps Identified
 
-### Current State
-- Uses `MainLayout` for all users
-- No conditional layout based on authentication
-- Missing animated donation counter
-- Missing Zakat calculator tab
-- Missing recurring donation toggle
-
-### Changes Required
-
-**File**: `src/pages/donate/DonatePage.tsx`
-
-1. **Conditional Layout Pattern**:
-```typescript
-import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { MainLayout } from '@/components/layout';
-
-// Inside component
-const Layout = user ? DashboardLayout : MainLayout;
-return <Layout>...</Layout>;
-```
-
-2. **Add Animated Counter**:
-   - Apply `animate-counter-up` class to stats
-   - Add visual counter increment animation
-
-3. **Add Zakat Calculator Tab**:
-   - New tab in the form section
-   - Calculate Zakat based on wealth input (2.5%)
-   - Auto-fill donation amount from calculation
-
-4. **Add Recurring Donation Toggle**:
-   - Switch component for monthly recurring
-   - Update form state to include `is_recurring`
-
-5. **GlassCard Styling**:
-   - Wrap stats in GlassCard components
-   - Add hover effects and glow
+| Gap | Severity | Impact |
+|-----|----------|--------|
+| **Missing .env.example** | Medium | Onboarding friction |
+| **Leaked Password Protection** | High | Auth security warning |
+| **Missing API Validation Layer** | Medium | No centralized request validation schemas |
+| **No Idempotency Keys** | High | Payment/booking duplicate risk |
+| **No Webhook Handlers** | High | Payment confirmation incomplete |
+| **No Schema Versioning** | Medium | API contract drift risk |
+| **Incomplete Test Coverage** | Medium | Gaps in E2E flow testing |
 
 ---
 
-## Batch 2: ProfileSettingsPage Enhancement
+## Phase 1: Immediate Security Fixes (Week 1)
 
-### Current State
-- Uses `DashboardLayout` (correct)
-- Uses standard `Card` components
-- Missing GlassCard styling
-- Missing security section with session management
-- Missing data export button
+### 1.1 Enable Leaked Password Protection
+**Priority**: Critical
+**Location**: Lovable Cloud Auth Settings
 
-### Changes Required
+Enable the leaked password protection feature flagged by the database linter.
 
-**File**: `src/pages/settings/ProfileSettingsPage.tsx`
+### 1.2 Create Environment Template
+**File**: `.env.example`
 
-1. **GlassCard Styling**:
-   - Import and wrap all sections in `GlassCard`
-   - Add `hoverable` and `glow` props
+```text
+# Supabase Configuration (auto-populated by Lovable Cloud)
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_PUBLISHABLE_KEY=your-anon-key
+VITE_SUPABASE_PROJECT_ID=your-project-id
 
-2. **Avatar Camera Overlay Animation**:
-   - Add hover scale effect on avatar container
-   - Add gradient overlay on hover
+# Optional: Analytics
+VITE_ENABLE_ANALYTICS=false
+```
 
-3. **Add Security Tab**:
-   - New tab alongside Profile, Notifications, Preferences
-   - Include:
-     - Password change section
-     - Active sessions list (mock data)
-     - Two-factor authentication toggle (placeholder)
-     - Account deletion option
+### 1.3 Centralized API Error Codes
+**File**: `src/api/errors.ts`
 
-4. **Add Data Export Button**:
-   - GDPR compliance
-   - Button to request data export
-   - Toast confirmation
-
-5. **Animated Toggle Switches**:
-   - Add haptic feedback on toggle
-   - Visual feedback animation
+Create standardized error taxonomy:
+- `AUTH_001` - Authentication required
+- `AUTH_002` - Insufficient permissions
+- `VALIDATION_001` - Invalid input
+- `BOOKING_001` - Service unavailable
+- `PAYMENT_001` - Payment failed
 
 ---
 
-## Batch 3: New Feature Modules
+## Phase 2: Payment & Transaction Hardening (Week 2)
 
-### 3.1 Locations Module
-**File**: `src/modules/locations/index.ts`
+### 2.1 Idempotency Key Implementation
+**New Edge Function**: `process-payment`
 
-```typescript
-export { useGeolocation } from '@/hooks/useGeolocation';
-export { useRitualLocation } from '@/hooks/useRitualLocation';
-export { HOLY_SITES } from '@/config/constants';
+Add idempotency tracking to prevent duplicate charges:
+
+```text
+Database Table: payment_idempotency_keys
+  - key (text, unique)
+  - booking_id (uuid)
+  - status (pending | completed | failed)
+  - response_data (jsonb)
+  - created_at (timestamp)
+  - expires_at (timestamp)
 ```
 
-### 3.2 Reports Module
-**File**: `src/modules/reports/index.ts`
+**Edge Function Pattern**:
+1. Receive payment request with `X-Idempotency-Key` header
+2. Check if key exists in table
+3. If exists and completed, return cached response
+4. If exists and pending, return 409 Conflict
+5. If new, process payment and store result
 
-```typescript
-export { useAdminStats } from '@/hooks/useAdminStats';
-export { useAuditLogs } from '@/hooks/useAuditLogs';
-export * as AuditAPI from '@/api/services/audit.service';
+### 2.2 Webhook Handler
+**New Edge Function**: `stripe-webhook`
+
+Handle payment confirmations:
+- Verify Stripe signature
+- Update transaction status
+- Trigger booking confirmation
+- Log to audit trail
+
+### 2.3 Audit-Safe Transaction Flow
+
+```text
+┌─────────────────────────────────────────────────────────┐
+│                   Payment Flow                          │
+├─────────────────────────────────────────────────────────┤
+│  1. Create booking (status: pending)                    │
+│  2. Create transaction (status: pending)                │
+│  3. Initiate payment with idempotency key               │
+│  4. Webhook confirms payment                            │
+│  5. Update transaction (status: completed)              │
+│  6. Update booking (status: accepted)                   │
+│  7. Log to booking_activities + audit_logs              │
+└─────────────────────────────────────────────────────────┘
 ```
-
-### 3.3 Services Module
-**File**: `src/modules/services/index.ts`
-
-```typescript
-export { useServices } from '@/hooks/useServices';
-export { useProviderServices } from '@/hooks/useProviderServices';
-export * as ServicesAPI from '@/api/services/services.service';
-export { SERVICE_TYPES, SERVICE_TYPE_LABELS } from '@/config/constants';
-```
-
-### 3.4 Providers Module
-**File**: `src/modules/providers/index.ts`
-
-```typescript
-export { useProvider } from '@/hooks/useProvider';
-export { usePublicProvider } from '@/hooks/usePublicProvider';
-export { useProviderAvailability } from '@/hooks/useProviderAvailability';
-export { usePilgrimCertification } from '@/hooks/usePilgrimCertification';
-export * as ProvidersAPI from '@/api/services/providers.service';
-```
-
-### 3.5 Update Module Index
-**File**: `src/modules/index.ts`
-
-Add exports for new modules.
 
 ---
 
-## Batch 4: Test Coverage Expansion
+## Phase 3: API Contract Hardening (Week 2-3)
 
-### 4.1 Hooks Tests
-**File**: `src/tests/hooks/auth.test.ts`
-- Test `hasPermission` function
-- Test role hierarchy
-- Test `canAccessRoute` helper
+### 3.1 Request Validation Schemas
+**File**: `src/api/schemas/index.ts`
 
-### 4.2 Components Tests
-**File**: `src/tests/components/feedback.test.ts`
-- Test ConfirmDialog behavior
-- Test EmptyState rendering
-- Test LoadingState variants
+Centralize Zod schemas for all API operations:
 
-### 4.3 Role-Based Routing Tests
-**File**: `src/tests/routing/protected-routes.test.ts`
-- Test ProtectedRoute component
-- Test role-based redirects
-- Test unauthorized access handling
+```typescript
+// Example structure
+export const BookingSchemas = {
+  create: z.object({
+    service_id: z.string().uuid(),
+    beneficiary_id: z.string().uuid(),
+    scheduled_date: z.string().date().nullable(),
+    special_requests: z.string().max(1000).nullable(),
+  }),
+  update: z.object({
+    status: z.enum(['pending', 'accepted', 'in_progress', 'completed', 'cancelled']),
+  }),
+};
+```
 
-### 4.4 API Services Tests
-**File**: `src/tests/api/providers.test.ts`
-- Test provider CRUD operations
-- Test availability management
-- Test KYC status updates
+### 3.2 API Version Header
+Add version negotiation to edge functions:
+
+```typescript
+const API_VERSION = '2026-02-01';
+const clientVersion = req.headers.get('X-API-Version');
+
+if (clientVersion && clientVersion < MINIMUM_SUPPORTED_VERSION) {
+  return new Response(
+    JSON.stringify({ error: 'API version deprecated', minimum: MINIMUM_SUPPORTED_VERSION }),
+    { status: 426 }
+  );
+}
+```
+
+### 3.3 Centralized Response Format
+**File**: `src/api/response-format.ts`
+
+Standardize all API responses:
+
+```typescript
+interface StandardResponse<T> {
+  success: boolean;
+  data: T | null;
+  error: {
+    code: string;
+    message: string;
+    details?: Record<string, string[]>;
+  } | null;
+  meta: {
+    timestamp: string;
+    version: string;
+    request_id: string;
+  };
+}
+```
+
+---
+
+## Phase 4: Test Coverage Expansion (Week 3)
+
+### 4.1 E2E Flow Tests
+**Directory**: `src/tests/e2e/`
+
+Priority test scenarios:
+1. Complete booking flow (traveler)
+2. KYC submission and approval (provider)
+3. Role-based navigation and access
+4. Donation with allocation
+5. Ritual event recording with proof upload
+
+### 4.2 API Integration Tests
+**Directory**: `src/tests/integration/`
+
+Test all service modules:
+- Bookings lifecycle
+- Provider availability updates
+- Transaction processing
+- Audit log creation
+
+### 4.3 Security Tests
+**File**: `src/tests/security/rls-policies.test.ts`
+
+Verify RLS enforcement:
+- Cross-user data access attempts
+- Privilege escalation attempts
+- Admin-only endpoint protection
+
+---
+
+## Phase 5: Real-time & Notification Hardening (Week 3-4)
+
+### 5.1 Notification Queue
+**New Table**: `notification_queue`
+
+Reliable notification delivery:
+- Retry logic for failed deliveries
+- Batch processing for bulk notifications
+- Read receipt tracking
+
+### 5.2 Real-time Channel Security
+
+Add channel authorization in edge function:
+
+```typescript
+// Only allow subscription if user is booking participant
+const canSubscribe = await checkBookingAccess(userId, bookingId);
+if (!canSubscribe) {
+  return new Response('Forbidden', { status: 403 });
+}
+```
+
+---
+
+## Implementation Priority Matrix
+
+| Task | Priority | Effort | Risk Mitigation |
+|------|----------|--------|-----------------|
+| Enable leaked password protection | P0 | 5 min | Auth security |
+| Create .env.example | P0 | 10 min | Developer onboarding |
+| Add idempotency keys | P1 | 4 hrs | Payment safety |
+| Create payment webhook | P1 | 6 hrs | Payment confirmation |
+| Centralize validation schemas | P2 | 4 hrs | Data integrity |
+| API versioning | P2 | 2 hrs | Contract stability |
+| E2E test suite | P2 | 8 hrs | Regression prevention |
+| Notification queue | P3 | 6 hrs | Delivery reliability |
 
 ---
 
 ## Files to Create
 
 ```text
-src/modules/
-  locations/
-    index.ts
-  reports/
-    index.ts
-  services/
-    index.ts
-  providers/
-    index.ts
-
-src/tests/
-  hooks/
-    auth.test.ts
-  components/
-    feedback.test.ts
-  routing/
-    protected-routes.test.ts
-  api/
-    providers.test.ts
+New Files:
+  .env.example                          # Environment template
+  src/api/errors.ts                     # Error code definitions
+  src/api/schemas/index.ts              # Centralized validation schemas
+  src/api/schemas/booking.schema.ts     # Booking validation
+  src/api/schemas/payment.schema.ts     # Payment validation
+  src/api/response-format.ts            # Standard response wrapper
+  supabase/functions/stripe-webhook/    # Payment webhook handler
+  supabase/functions/process-payment/   # Idempotent payment processor
+  src/tests/e2e/booking-flow.test.ts    # E2E booking test
+  src/tests/security/rls-policies.test.ts # RLS verification
 ```
 
 ## Files to Modify
 
 ```text
-Pages:
-  - src/pages/donate/DonatePage.tsx (conditional layout, GlassCard, Zakat calculator)
-  - src/pages/settings/ProfileSettingsPage.tsx (GlassCard, security tab, data export)
-
-Modules:
-  - src/modules/index.ts (add new module exports)
+Modified Files:
+  supabase/config.toml                  # Add new edge functions
+  src/api/base.ts                       # Add version header support
+  src/api/services/bookings.service.ts  # Add idempotency key support
 ```
 
 ---
 
-## Technical Implementation Details
+## Database Migrations Required
 
-### Conditional Layout Pattern
-```typescript
-export default function DonatePage() {
-  const { user } = useAuth();
-  const Layout = user ? DashboardLayout : MainLayout;
+### Migration 1: Idempotency Keys Table
+```sql
+CREATE TABLE public.payment_idempotency_keys (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  idempotency_key text UNIQUE NOT NULL,
+  booking_id uuid REFERENCES bookings(id),
+  status text DEFAULT 'pending',
+  response_data jsonb,
+  created_at timestamptz DEFAULT now(),
+  expires_at timestamptz DEFAULT now() + interval '24 hours'
+);
 
-  return (
-    <Layout>
-      {/* content */}
-    </Layout>
-  );
-}
+CREATE INDEX idx_idempotency_key ON payment_idempotency_keys(idempotency_key);
+ALTER TABLE payment_idempotency_keys ENABLE ROW LEVEL SECURITY;
 ```
 
-### Zakat Calculator Component
-```typescript
-const ZakatCalculator = () => {
-  const [wealth, setWealth] = useState(0);
-  const zakatAmount = wealth * 0.025; // 2.5% Zakat
+### Migration 2: Notification Queue Table
+```sql
+CREATE TABLE public.notification_queue (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE,
+  notification_type text NOT NULL,
+  payload jsonb NOT NULL,
+  status text DEFAULT 'pending',
+  retry_count integer DEFAULT 0,
+  max_retries integer DEFAULT 3,
+  scheduled_at timestamptz DEFAULT now(),
+  sent_at timestamptz,
+  created_at timestamptz DEFAULT now()
+);
 
-  return (
-    <GlassCard>
-      <Input 
-        type="number" 
-        value={wealth} 
-        onChange={(e) => setWealth(Number(e.target.value))} 
-        placeholder="Enter total wealth..."
-      />
-      <p>Zakat Due: {zakatAmount.toLocaleString()} SAR</p>
-      <Button onClick={() => setAmount(zakatAmount)}>
-        Use This Amount
-      </Button>
-    </GlassCard>
-  );
-};
-```
-
-### Security Section Structure
-```typescript
-<TabsContent value="security">
-  <GlassCard>
-    <CardTitle>Change Password</CardTitle>
-    {/* Password change form */}
-  </GlassCard>
-  
-  <GlassCard>
-    <CardTitle>Active Sessions</CardTitle>
-    {/* List of active sessions with device info */}
-    {/* "Sign out all" button */}
-  </GlassCard>
-  
-  <GlassCard>
-    <CardTitle>Two-Factor Authentication</CardTitle>
-    {/* 2FA setup placeholder */}
-  </GlassCard>
-  
-  <GlassCard variant="destructive">
-    <CardTitle>Delete Account</CardTitle>
-    {/* Account deletion with ConfirmDialog */}
-  </GlassCard>
-</TabsContent>
+ALTER TABLE notification_queue ENABLE ROW LEVEL SECURITY;
 ```
 
 ---
 
-## Implementation Order
+## Success Metrics
 
-### Step 1: Create New Feature Modules
-1. Create `src/modules/locations/index.ts`
-2. Create `src/modules/reports/index.ts`
-3. Create `src/modules/services/index.ts`
-4. Create `src/modules/providers/index.ts`
-5. Update `src/modules/index.ts`
-
-### Step 2: Migrate DonatePage
-1. Add conditional layout pattern
-2. Add GlassCard styling to stats
-3. Add Zakat calculator tab
-4. Add recurring donation toggle
-5. Add animated counter
-
-### Step 3: Enhance ProfileSettingsPage
-1. Add Security tab
-2. Wrap sections in GlassCard
-3. Add animated toggle switches
-4. Add data export button
-5. Add session management section
-
-### Step 4: Add Test Skeletons
-1. Create hooks tests
-2. Create component tests
-3. Create routing tests
-4. Create API tests
+After implementation:
+- Zero duplicate payments (idempotency)
+- 100% webhook delivery confirmation
+- All API responses follow standard format
+- E2E tests cover critical user journeys
+- Leaked password protection enabled
 
 ---
 
-## Success Criteria
+## Honest Verdict Summary
 
-- DonatePage uses conditional DashboardLayout/MainLayout
-- DonatePage has Zakat calculator tab
-- DonatePage has recurring donation toggle
-- ProfileSettingsPage has Security tab with session management
-- ProfileSettingsPage uses GlassCard throughout
-- All new feature modules created and exported
-- Test skeletons for hooks, components, routing, and API
-- All components support RTL
-- Premium animations applied throughout
+WAKILNI is **NOT starting from scratch**. The existing implementation has:
+- Proper RBAC with database-level enforcement
+- 97 RLS policies protecting data access
+- Centralized API layer with error handling
+- Protected routes with role checking
+- Server-side price calculation in edge functions
+
+The gaps are **real but addressable**:
+1. Payment flow needs idempotency and webhooks
+2. API contracts need versioning
+3. Test coverage needs expansion
+4. Environment setup needs documentation
+
+**Timeline**: 2-3 weeks to production-ready with the above plan.
